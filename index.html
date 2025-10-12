@@ -3,144 +3,280 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Manifold — Cylinder Calculator</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Cylinder Calculator (Password Protected)</title>
+  <style>
+    :root{--bg:#0f172a;--card:#0b1220;--accent:#0ea5e9;--muted:#94a3b8;--glass:rgba(255,255,255,0.03)}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial;margin:0;background:linear-gradient(180deg,#020617 0%,#071132 100%);color:#e6eef8}
+    .wrap{max-width:980px;margin:36px auto;padding:20px}
+    header{display:flex;align-items:center;gap:16px}
+    header h1{margin:0;font-size:20px}
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 24px rgba(2,6,23,0.6)}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=number],select,input[type=text]{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:inherit}
+    .outputs{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+    .out{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:12px;border-radius:10px}
+    .muted{font-size:12px;color:var(--muted)}
+    .row{display:flex;gap:8px}
+    button{background:var(--accent);border:0;padding:10px 14px;border-radius:10px;color:#052033;font-weight:600;cursor:pointer}
+    .small{padding:8px 10px;border-radius:8px;font-size:13px}
+    footer{margin-top:18px;font-size:13px;color:var(--muted)}
+    .note{font-size:13px;color:var(--muted)}
+    @media (max-width:760px){.grid{grid-template-columns:1fr}.outputs{grid-template-columns:1fr}}
+    .top-actions{margin-left:auto;display:flex;gap:8px}
+    .hint{font-size:12px;color:#9fbbd4}
+    .center{display:flex;align-items:center;justify-content:center}
+    /* password modal */
+    .modal{position:fixed;inset:0;background:linear-gradient(180deg,rgba(2,6,23,0.7),rgba(2,6,23,0.9));display:flex;align-items:center;justify-content:center}
+    .modalCard{background:#071127;padding:22px;border-radius:12px;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(2,6,23,0.7)}
+    .linklike{background:transparent;border:1px dashed rgba(255,255,255,0.06);padding:8px;border-radius:8px;color:var(--muted)}
+    .smallmuted{font-size:12px;color:var(--muted)}
+    .flex{display:flex;gap:8px;align-items:center}
+    .kbd{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:6px;font-size:12px}
+  </style>
 </head>
 <body>
-  <div class="container">
+  <div class="wrap">
     <header>
-      <h1>Manifold — Cylinder Calculator</h1>
-      <div class="subtitle">Bore/rod flow, force, pressure & power — password protected</div>
+      <div>
+        <h1>Cylinder Calculator</h1>
+        <div class="hint">Instant bore/rod flow, force, pressure & power calculations</div>
+      </div>
+      <div class="top-actions">
+        <button id="exportBtn" class="small">Export HTML</button>
+        <button id="resetPwd" class="small linklike">Change Password</button>
+      </div>
     </header>
 
-    <main class="card" id="app">
-      <div id="lock" class="lock">
-        <h2>Enter password to unlock</h2>
-        <input id="pwd" type="password" placeholder="Password">
-        <div class="row">
-          <button id="unlock">Unlock</button>
-          <button id="setPwd" class="link">Set/Change Password</button>
+    <section class="card" style="margin-top:12px">
+      <div class="grid">
+        <div>
+          <label>Bore diameter (mm)</label>
+          <input id="bore" type="number" step="0.01" min="0" value="320">
         </div>
-        <div class="hint">Password is stored locally in your browser. For server-grade protection use server auth.</div>
-      </div>
-
-      <div id="calculator" style="display:none">
-        <section class="inputs">
-          <div class="col">
-            <label>Bore diameter (mm)</label>
-            <input id="bore" type="number" step="0.01" value="320">
-          </div>
-          <div class="col">
-            <label>Rod diameter (mm)</label>
-            <input id="rod" type="number" step="0.01" value="220">
-          </div>
-          <div class="col">
-            <label>Stroke (mm)</label>
-            <input id="stroke" type="number" step="0.1" value="1500">
-          </div>
-          <div class="col">
-            <label>Number of cylinders</label>
-            <input id="nCyl" type="number" step="1" value="1">
-          </div>
-
-          <div class="col">
-            <label>Time option</label>
-            <select id="timeOpt">
-              <option value="sec">Time to complete stroke (sec)</option>
-              <option value="mmsec">Speed (mm/sec)</option>
-              <option value="mmin">Speed (m/min)</option>
-            </select>
-          </div>
-          <div class="col">
-            <label id="timeLabel">Time value (sec)</label>
-            <input id="timeVal" type="number" step="0.01" value="6">
-          </div>
-
-          <div class="col">
-            <label>Pressure (bar) — optional</label>
-            <input id="pressure" type="number" step="0.01" placeholder="Enter to compute force">
-          </div>
-          <div class="col">
-            <label>Force (kN) — optional</label>
-            <input id="force" type="number" step="0.001" placeholder="Enter to compute pressure">
-          </div>
-
-          <div class="col">
-            <label>Efficiency (pump & motor) %</label>
-            <input id="eff" type="number" step="0.1" value="90">
-          </div>
-          <div class="col">
-            <label>Regeneration (combine rod return to extend)</label>
-            <div class="checkboxRow"><input id="regen" type="checkbox"><label for="regen">Enable regeneration</label></div>
-          </div>
-
-        </section>
-
-        <section class="actions">
-          <button id="calc" class="primary">Calculate</button>
-          <button id="clear" class="secondary">Clear inputs</button>
-          <button id="export" class="secondary">Export HTML</button>
-        </section>
-
-        <section class="results">
-          <div class="result">
-            <div class="rLabel">Bore area</div>
-            <div id="areaB" class="rVal">--</div>
-          </div>
-          <div class="result">
-            <div class="rLabel">Rod annulus area</div>
-            <div id="areaR" class="rVal">--</div>
-          </div>
-          <div class="result">
-            <div class="rLabel">Piston speed</div>
-            <div id="speed" class="rVal">--</div>
-          </div>
-          <div class="result">
-            <div class="rLabel">Bore flow (L/min)</div>
-            <div id="flowB" class="rVal">--</div>
-          </div>
-          <div class="result">
-            <div class="rLabel">Rod flow (L/min)</div>
-            <div id="flowR" class="rVal">--</div>
-          </div>
-          <div class="result">
-            <div class="rLabel">Effective extension flow (L/min)</div>
-            <div id="flowEff" class="rVal">--</div>
-          </div>
-          <div class="result">
-            <div class="rLabel">Total flow (L/min) — all cylinders</div>
-            <div id="flowT" class="rVal">--</div>
-          </div>
-          <div class="result">
-            <div class="rLabel">Force (kN)</div>
-            <div id="forceOut" class="rVal">--</div>
-          </div>
-          <div class="result">
-            <div class="rLabel">Pressure required (bar)</div>
-            <div id="pressureOut" class="rVal">--</div>
-          </div>
-          <div class="result">
-            <div class="rLabel">Hydraulic power (kW)</div>
-            <div id="power" class="rVal">--</div>
-          </div>
-        </section>
-
-        <div class="notes">
-          <strong>Notes:</strong>
-          <ul>
-            <li>Areas use π·D²/4. Flow L/min = area(m²) × speed(m/min) × 1000. Power(kW) = Pressure(bar) × Flow(L/min) / 600 / (efficiency).</li>
-            <li>Regeneration mode adds rod return flow to bore flow for extension (approximation).</li>
-            <li>Password stored locally in the browser (client-side). For stronger security use server authentication.</li>
-          </ul>
+        <div>
+          <label>Rod diameter (mm)</label>
+          <input id="rod" type="number" step="0.01" min="0" value="220">
+        </div>
+        <div>
+          <label>Stroke (mm)</label>
+          <input id="stroke" type="number" step="0.1" min="0" value="1500">
+        </div>
+        <div>
+          <label>Time option</label>
+          <select id="timeOpt">
+            <option value="sec">Time to complete stroke (sec)</option>
+            <option value="mmsec">Speed (mm/sec)</option>
+            <option value="mmin">Speed (m/min)</option>
+          </select>
+        </div>
+        <div>
+          <label id="timeLabel">Time value (sec)</label>
+          <input id="timeVal" type="number" step="0.01" min="0" value="6">
+        </div>
+        <div>
+          <label>Pressure (bar) — optional</label>
+          <input id="pressure" type="number" step="0.01" min="0" placeholder="Enter to compute force">
+        </div>
+        <div>
+          <label>Force (kN) — optional</label>
+          <input id="force" type="number" step="0.001" min="0" placeholder="Enter to compute pressure">
+        </div>
+        <div>
+          <label>Number of cylinders</label>
+          <input id="nCyl" type="number" step="1" min="1" value="1">
         </div>
       </div>
-    </main>
 
-    <footer>
-      <div>Prepared for <strong>manifolddesign</strong>. Host on GitHub Pages at <code>https://manifolddesign.github.io/manifold/</code></div>
+      <div style="margin-top:12px" class="row">
+        <button id="calc">Calculate</button>
+        <button id="clear" class="small">Clear</button>
+        <div style="margin-left:auto" class="smallmuted">Results update automatically on Calculate</div>
+      </div>
+
+      <div class="outputs">
+        <div class="out">
+          <div class="muted">Bore area (m²)</div>
+          <div id="areaB">--</div>
+        </div>
+        <div class="out">
+          <div class="muted">Rod annulus area (m²)</div>
+          <div id="areaR">--</div>
+        </div>
+        <div class="out">
+          <div class="muted">Piston speed (m/min)</div>
+          <div id="speed">--</div>
+        </div>
+        <div class="out">
+          <div class="muted">Bore flow (L/min)</div>
+          <div id="flowB">--</div>
+        </div>
+        <div class="out">
+          <div class="muted">Rod flow (L/min)</div>
+          <div id="flowR">--</div>
+        </div>
+        <div class="out">
+          <div class="muted">Total flow (L/min)</div>
+          <div id="flowT">--</div>
+        </div>
+        <div class="out">
+          <div class="muted">Force (kN)</div>
+          <div id="forceOut">--</div>
+        </div>
+        <div class="out">
+          <div class="muted">Pressure required (bar)</div>
+          <div id="pressureOut">--</div>
+        </div>
+        <div class="out">
+          <div class="muted">Hydraulic Power (kW) @ bore flow</div>
+          <div id="powerB">--</div>
+        </div>
+        <div class="out">
+          <div class="muted">Hydraulic Power (kW) @ rod flow</div>
+          <div id="powerR">--</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px" class="note">Notes: Areas use π·D²/4. Flow L/min = area(m²) × speed(m/min) × 1000. Power(kW) = Pressure(bar) × Flow(L/min) / 600. The password protection is client-side (stored in your browser) — suitable for casual privacy but not high-security.</div>
+    </section>
+
+    <footer class="center">
+      <div class="muted">To host: save this HTML file and upload to GitHub Pages / Netlify / or your server. For server-side secure protection, use server auth (instructions inside export).</div>
     </footer>
   </div>
 
-  <script src="script.js"></script>
+  <!-- Password modal -->
+  <div id="pwdModal" class="modal" style="display:none">
+    <div class="modalCard">
+      <h3 id="pwdTitle">Enter password</h3>
+      <div class="smallmuted">This page is password protected. On first use you will be asked to set a password (saved locally).</div>
+      <div style="height:12px"></div>
+      <input id="pwdInput" type="password" placeholder="Password" style="width:100%;padding:10px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);color:inherit">
+      <div style="height:10px"></div>
+      <div class="flex">
+        <button id="pwdOk">OK</button>
+        <button id="pwdCancel" class="small linklike">Cancel</button>
+        <div style="margin-left:auto" class="smallmuted">Local-only password</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---- Password handling (client-side) ----
+    const modal = document.getElementById('pwdModal');
+    const pwdInput = document.getElementById('pwdInput');
+    const pwdTitle = document.getElementById('pwdTitle');
+    const pwdOk = document.getElementById('pwdOk');
+    const pwdCancel = document.getElementById('pwdCancel');
+    const resetBtn = document.getElementById('resetPwd');
+
+    function hasPassword(){return !!localStorage.getItem('cyl_calc_pwd_hash')}
+    function hash(s){ // simple hash (not cryptographically secure) - for casual protection only
+      let h=2166136261; for(let i=0;i<s.length;i++){h ^= s.charCodeAt(i); h += (h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24);} return (h>>>0).toString(16)
+    }
+    function showModal(setMode){
+      modal.style.display='flex'; pwdInput.value=''; pwdInput.focus();
+      if(setMode){ pwdTitle.textContent='Set a new password'; pwdOk.textContent='Set password' } else { pwdTitle.textContent='Enter password'; pwdOk.textContent='Unlock' }
+      pwdOk.dataset.set = setMode? '1':'0';
+    }
+    function hideModal(){ modal.style.display='none'; }
+    // on load
+    window.addEventListener('load', ()=>{
+      if(!hasPassword()) showModal(true); else showModal(false);
+    });
+    pwdOk.addEventListener('click', ()=>{
+      const v = pwdInput.value.trim(); if(!v){alert('Enter a password.'); return}
+      if(pwdOk.dataset.set==='1'){ localStorage.setItem('cyl_calc_pwd_hash', hash(v)); hideModal(); } else {
+        const stored = localStorage.getItem('cyl_calc_pwd_hash'); if(hash(v)===stored){ hideModal(); } else { alert('Incorrect password'); }
+      }
+    });
+    pwdCancel.addEventListener('click', ()=>{ if(!hasPassword()){ alert('A password is required on first use.'); } else { hideModal(); }});
+    resetBtn.addEventListener('click', ()=>{ if(confirm('Change password? This will require entering the current password first.')){ showModal(false); pwdOk.dataset.change='1'; /* after unlock we'll allow set */ }});
+
+    // ---- Calculator logic ----
+    const els = ['bore','rod','stroke','timeOpt','timeVal','pressure','force','nCyl'].reduce((acc,id)=>{acc[id]=document.getElementById(id);return acc},{})
+    const out = ['areaB','areaR','speed','flowB','flowR','flowT','forceOut','pressureOut','powerB','powerR'].reduce((acc,id)=>{acc[id]=document.getElementById(id);return acc},{})
+
+    function mmToM(x){return x/1000}
+    function areaFromDia_mm(d){return Math.PI * Math.pow(mmToM(d)/2,2)}
+    function compute(){
+      const bore = parseFloat(els.bore.value) || 0; const rod = parseFloat(els.rod.value) || 0; const stroke = parseFloat(els.stroke.value) || 0;
+      const n = parseInt(els.nCyl.value) || 1;
+      const areaB = areaFromDia_mm(bore); const areaR = Math.max(areaB - areaFromDia_mm(rod), 0);
+      // speed in m/min
+      const opt = els.timeOpt.value; const tv = parseFloat(els.timeVal.value) || 0;
+      let speed_m_per_min = 0;
+      if(opt==='sec'){
+        // time to complete stroke in seconds
+        const stroke_m = mmToM(stroke);
+        const sp_m_s = tv>0 ? (stroke_m / tv) : 0; speed_m_per_min = sp_m_s*60;
+      } else if(opt==='mmsec'){
+        const sp_m_s = tv/1000; speed_m_per_min = sp_m_s*60;
+      } else if(opt==='mmin'){
+        speed_m_per_min = tv;
+      }
+
+      const flowB = areaB * speed_m_per_min * 1000; // L/min
+      const flowR = areaR * speed_m_per_min * 1000; // L/min
+      const flowTotal = (flowB + flowR) * n; // if you want total across cylinders
+
+      // force/pressure interplay
+      let pressure_val = parseFloat(els.pressure.value);
+      let force_val = parseFloat(els.force.value);
+      let forceFromP = null, pFromF = null;
+      if(!isNaN(pressure_val) && pressure_val>0){ // compute force on bore
+        forceFromP = (pressure_val * 1e5) * areaB; // N
+      }
+      if(!isNaN(force_val) && force_val>0){ // force provided in kN => Pa
+        const FN = force_val*1000;
+        pFromF = (FN / areaB) / 1e5; // bar
+      }
+
+      // hydraulic power kW (using P*Q/600 formula) - compute per cylinder side (use pressure if provided)
+      function power_kW(P_bar, Q_Lmin){ if(!P_bar || !Q_Lmin) return null; return (P_bar * Q_Lmin) / 600 }
+      const P_for_power = !isNaN(pressure_val) && pressure_val>0 ? pressure_val : (pFromF || null);
+      const powerB = P_for_power ? power_kW(P_for_power, flowB) : null;
+      const powerR = P_for_power ? power_kW(P_for_power, flowR) : null;
+
+      // populate
+      out.areaB.textContent = areaB? areaB.toExponential(6) + ' m²' : '0';
+      out.areaR.textContent = areaR? areaR.toExponential(6) + ' m²' : '0';
+      out.speed.textContent = speed_m_per_min? speed_m_per_min.toFixed(4) + ' m/min' : '0';
+      out.flowB.textContent = flowB? (flowB.toFixed(3) + ' L/min') : '0';
+      out.flowR.textContent = flowR? (flowR.toFixed(3) + ' L/min') : '0';
+      out.flowT.textContent = flowTotal? (flowTotal.toFixed(3) + ' L/min (all cylinders)') : '0';
+      out.forceOut.textContent = forceFromP? ((forceFromP/1000).toFixed(3) + ' kN (at ' + pressure_val + ' bar)') : (force_val? (force_val.toFixed(3) + ' kN (input)') : '--');
+      out.pressureOut.textContent = pFromF? (pFromF.toFixed(3) + ' bar (to achieve ' + force_val + ' kN)') : (pressure_val? pressure_val+' bar (input)':'--');
+      out.powerB.textContent = powerB? (powerB.toFixed(3) + ' kW') : '--';
+      out.powerR.textContent = powerR? (powerR.toFixed(3) + ' kW') : '--';
+    }
+
+    document.getElementById('calc').addEventListener('click', compute);
+    document.getElementById('clear').addEventListener('click', ()=>{ ['bore','rod','stroke','timeVal','pressure','force','nCyl'].forEach(id=>document.getElementById(id).value=''); compute(); });
+    document.getElementById('timeOpt').addEventListener('change', (e)=>{ const map={'sec':'Time value (sec)','mmsec':'Time value (mm/sec)','mmin':'Time value (m/min)'}; document.getElementById('timeLabel').textContent = map[e.target.value]; });
+
+    // export HTML
+    document.getElementById('exportBtn').addEventListener('click', ()=>{
+      const blob = new Blob([document.documentElement.outerHTML], {type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href=url; a.download = 'cylinder_calculator_protected.html'; document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    // unlock-then-change flow for password change
+    pwdOk.addEventListener('click', ()=>{
+      if(pwdOk.dataset.change==='1'){
+        // user wanted to change password; validate current and then set new
+        const entered = pwdInput.value.trim(); if(!entered){ alert('enter password'); return }
+        const stored = localStorage.getItem('cyl_calc_pwd_hash'); if(hash(entered)!==stored){ alert('current password incorrect'); return }
+        const newPwd = prompt('Enter new password:'); if(!newPwd){ alert('password change cancelled'); pwdOk.dataset.change='0'; return }
+        localStorage.setItem('cyl_calc_pwd_hash', hash(newPwd)); alert('password changed'); pwdOk.dataset.change='0'; hideModal();
+      }
+    });
+
+    // initial compute
+    compute();
+
+  </script>
 </body>
 </html>
