@@ -1,38 +1,34 @@
-
-:root{
-  --bg:#f6f8fb;
-  --card:#ffffff;
-  --accent:#0b69ff;
-  --muted:#64748b;
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+  padding: 20px;
 }
-*{box-sizing:border-box;font-family:Inter,system-ui,Arial;line-height:1.25}
-body{margin:0;background:linear-gradient(180deg,#eef2ff,#f8fafc);color:#0b1724}
-.container{max-width:980px;margin:28px auto;padding:18px}
-header h1{margin:0;font-size:20px}
-.subtitle{color:var(--muted);font-size:13px;margin-top:6px}
-.card{background:var(--card);border-radius:12px;padding:18px;margin-top:12px;box-shadow:0 8px 24px rgba(15,23,42,0.06)}
-.inputs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.inputs .col{display:flex;flex-direction:column}
-label{font-size:13px;color:var(--muted);margin-bottom:6px}
-input[type=number],select,input[type=password]{padding:10px;border-radius:8px;border:1px solid #e6eef8;background:#fbfdff}
-.actions{display:flex;gap:8px;margin-top:12px}
-.primary{background:var(--accent);color:#fff;padding:10px 14px;border-radius:8px;border:0;cursor:pointer}
-.secondary{background:transparent;border:1px solid #e6eef8;padding:10px 12px;border-radius:8px;cursor:pointer}
-.results{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
-.result{background:#fbfdff;padding:12px;border-radius:8px;border:1px solid #f0f6ff}
-.rLabel{font-size:13px;color:var(--muted)}
-.rVal{font-weight:700;margin-top:6px}
-.notes{font-size:13px;color:var(--muted);margin-top:12px}
-.lock{display:flex;flex-direction:column;gap:10px;padding:16px;background:#071127;color:#fff;border-radius:10px}
-.lock input{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff}
-.row{display:flex;gap:8px}
-.checkboxRow{display:flex;gap:8px;align-items:center}
-footer{margin-top:14px;color:var(--muted);font-size:13px}
-@media(max-width:900px){
-  .inputs{grid-template-columns:repeat(2,1fr)}
-  .results{grid-template-columns:repeat(2,1fr)}
+h1, h2 { text-align: center; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
 }
-@media(max-width:520px){
-  .inputs{grid-template-columns:1fr}
-  .results{grid-template-columns:1fr}
+input, select {
+  width: 100%;
+  padding: 6px;
+}
+button {
+  padding: 10px 20px;
+  display: block;
+  margin: 0 auto 20px auto;
+}
+.results p { margin: 4px 0; }
+#login-box {
+  text-align: center;
+  margin-top: 100px;
+}
+#login-box input {
+  padding: 10px;
+  width: 200px;
+}
+#login-box button {
+  padding: 8px 15px;
+  margin-top: 10px;
 }

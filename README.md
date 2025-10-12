@@ -1,30 +1,22 @@
+# Cylinder Calculation Web Tool - Manifold
 
-# Manifold — Cylinder Calculator (v2)
+This tool replicates the Excel logic for hydraulic cylinder calculations in a web interface.
 
-This package contains a web version of your Excel Cylinder Calculation that reproduces the same formulas and behaviors.
+## 📌 Features
+- Bore and rod side time/speed input
+- Force or pressure input (auto converts)
+- Bore and rod flow and power
+- Regeneration affects only bore power
+- Total flow and power with cylinder multiplier
+- Password protection (default: Manifold@2025)
 
-Files:
-- index.html
-- style.css
-- script.js
-- README.md (this file)
+## 🚀 Hosting on GitHub Pages
+1. Create a new repository (e.g. `manifold`).
+2. Upload `index.html`, `style.css`, and `script.js`.
+3. Go to **Settings → Pages** and deploy from branch.
+4. Access: `https://yourusername.github.io/manifold`
 
-## How to use
-1. Create a public GitHub repo named `manifold` under your `manifolddesign` account.
-2. Upload these four files to the repository root and commit.
-3. In the repo: Settings → Pages → Deploy from a branch → main / (root) → Save.
-4. Wait ~1–2 minutes. Your site will be live at:
-   https://manifolddesign.github.io/manifold/
-
-## Features implemented (matches Excel):
-- Time input options: `sec`, `mm/sec`, `m/sec`, `m/min`.
-- Pressure ↔ Force bidirectional: entering one computes the other (same formulas as Excel).
-- Regeneration checkbox (default off). Regeneration affects **power only**:
-  - If **enabled**, power uses bore flow (Qb).
-  - If **disabled**, power uses (Qb − Qa) for power calculation.
-- Multi-cylinder scaling (Number of cylinders multiplies flows and power where appropriate).
-- All outputs show units and formatted values.
-
-## Notes and limitations
-- Password protection is client-side (stored locally). For stronger security, use server auth.
-- The site runs fully in the browser — no backend required.
+## 🔐 Default Password
+```
+Manifold@2025
+```
