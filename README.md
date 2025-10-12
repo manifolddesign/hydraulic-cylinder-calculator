@@ -1,31 +1,30 @@
-# Manifold — Cylinder Calculator (GitHub Pages)
 
-Files in this package:
-- `index.html` — main calculator page (password-protected client-side)
-- `style.css` — styling
-- `script.js` — calculation logic and password handling
-- `README.md` — this file
+# Manifold — Cylinder Calculator (v2)
 
-## Quick setup (upload to GitHub)
-1. Sign in to GitHub and create a **new public repository** named `manifold`.
-2. Upload the files in this folder (`index.html`, `style.css`, `script.js`, `README.md`) to the repository root.
-3. Commit changes.
-4. Go to **Settings → Pages**, select **Deploy from a branch**, branch **main** and folder **/(root)**, then Save.
-5. Wait 1–2 minutes. Your site will be live at:
-   ```
+This package contains a web version of your Excel Cylinder Calculation that reproduces the same formulas and behaviors.
+
+Files:
+- index.html
+- style.css
+- script.js
+- README.md (this file)
+
+## How to use
+1. Create a public GitHub repo named `manifold` under your `manifolddesign` account.
+2. Upload these four files to the repository root and commit.
+3. In the repo: Settings → Pages → Deploy from a branch → main / (root) → Save.
+4. Wait ~1–2 minutes. Your site will be live at:
    https://manifolddesign.github.io/manifold/
-   ```
 
-## Password
-- Default password (preconfigured) is: `Manifold@2025`
-- Password is stored locally inside your browser (client-side). To change password:
-  - Click **Set/Change Password** on the page and follow prompts.
+## Features implemented (matches Excel):
+- Time input options: `sec`, `mm/sec`, `m/sec`, `m/min`.
+- Pressure ↔ Force bidirectional: entering one computes the other (same formulas as Excel).
+- Regeneration checkbox (default off). Regeneration affects **power only**:
+  - If **enabled**, power uses bore flow (Qb).
+  - If **disabled**, power uses (Qb − Qa) for power calculation.
+- Multi-cylinder scaling (Number of cylinders multiplies flows and power where appropriate).
+- All outputs show units and formatted values.
 
-## Notes & Limitations
-- Client-side password is suitable for casual privacy but **not** for strong security.
-- For stronger protection, deploy behind server auth (nginx basic auth, Netlify Identity, or GitHub Pages with third-party proxy).
-- Regeneration is implemented as an approximation: when enabled, the rod return flow is added to the bore flow to compute effective extension flow.
-
-If you want, I can:
-- Guide you step-by-step with screenshots to upload these files.
-- Create the repository & push files for you if you add me as a collaborator (or provide a temporary token).
+## Notes and limitations
+- Password protection is client-side (stored locally). For stronger security, use server auth.
+- The site runs fully in the browser — no backend required.

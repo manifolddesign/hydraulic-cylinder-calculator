@@ -1,9 +1,9 @@
+
 :root{
   --bg:#f6f8fb;
   --card:#ffffff;
   --accent:#0b69ff;
   --muted:#64748b;
-  --glass:rgba(11,105,255,0.06);
 }
 *{box-sizing:border-box;font-family:Inter,system-ui,Arial;line-height:1.25}
 body{margin:0;background:linear-gradient(180deg,#eef2ff,#f8fafc);color:#0b1724}
@@ -18,7 +18,7 @@ input[type=number],select,input[type=password]{padding:10px;border-radius:8px;bo
 .actions{display:flex;gap:8px;margin-top:12px}
 .primary{background:var(--accent);color:#fff;padding:10px 14px;border-radius:8px;border:0;cursor:pointer}
 .secondary{background:transparent;border:1px solid #e6eef8;padding:10px 12px;border-radius:8px;cursor:pointer}
-.results{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:12px}
+.results{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
 .result{background:#fbfdff;padding:12px;border-radius:8px;border:1px solid #f0f6ff}
 .rLabel{font-size:13px;color:var(--muted)}
 .rVal{font-weight:700;margin-top:6px}
@@ -26,13 +26,13 @@ input[type=number],select,input[type=password]{padding:10px;border-radius:8px;bo
 .lock{display:flex;flex-direction:column;gap:10px;padding:16px;background:#071127;color:#fff;border-radius:10px}
 .lock input{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff}
 .row{display:flex;gap:8px}
-.link{background:transparent;border:0;color:#fff;text-decoration:underline;cursor:pointer}
 .checkboxRow{display:flex;gap:8px;align-items:center}
 footer{margin-top:14px;color:var(--muted);font-size:13px}
 @media(max-width:900px){
   .inputs{grid-template-columns:repeat(2,1fr)}
-  .results{grid-template-columns:1fr}
+  .results{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:520px){
   .inputs{grid-template-columns:1fr}
+  .results{grid-template-columns:1fr}
 }
