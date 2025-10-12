@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Manifold — Cylinder Calculator</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Manifold — Cylinder Calculator</h1>
+      <div class="subtitle">Bore/rod flow, force, pressure & power — password protected</div>
+    </header>
+
+    <main class="card" id="app">
+      <div id="lock" class="lock">
+        <h2>Enter password to unlock</h2>
+        <input id="pwd" type="password" placeholder="Password">
+        <div class="row">
+          <button id="unlock">Unlock</button>
+          <button id="setPwd" class="link">Set/Change Password</button>
+        </div>
+        <div class="hint">Password is stored locally in your browser. For server-grade protection use server auth.</div>
+      </div>
+
+      <div id="calculator" style="display:none">
+        <section class="inputs">
+          <div class="col">
+            <label>Bore diameter (mm)</label>
+            <input id="bore" type="number" step="0.01" value="320">
+          </div>
+          <div class="col">
+            <label>Rod diameter (mm)</label>
+            <input id="rod" type="number" step="0.01" value="220">
+          </div>
+          <div class="col">
+            <label>Stroke (mm)</label>
+            <input id="stroke" type="number" step="0.1" value="1500">
+          </div>
+          <div class="col">
+            <label>Number of cylinders</label>
+            <input id="nCyl" type="number" step="1" value="1">
+          </div>
+
+          <div class="col">
+            <label>Time option</label>
+            <select id="timeOpt">
+              <option value="sec">Time to complete stroke (sec)</option>
+              <option value="mmsec">Speed (mm/sec)</option>
+              <option value="mmin">Speed (m/min)</option>
+            </select>
+          </div>
+          <div class="col">
+            <label id="timeLabel">Time value (sec)</label>
+            <input id="timeVal" type="number" step="0.01" value="6">
+          </div>
+
+          <div class="col">
+            <label>Pressure (bar) — optional</label>
+            <input id="pressure" type="number" step="0.01" placeholder="Enter to compute force">
+          </div>
+          <div class="col">
+            <label>Force (kN) — optional</label>
+            <input id="force" type="number" step="0.001" placeholder="Enter to compute pressure">
+          </div>
+
+          <div class="col">
+            <label>Efficiency (pump & motor) %</label>
+            <input id="eff" type="number" step="0.1" value="90">
+          </div>
+          <div class="col">
+            <label>Regeneration (combine rod return to extend)</label>
+            <div class="checkboxRow"><input id="regen" type="checkbox"><label for="regen">Enable regeneration</label></div>
+          </div>
+
+        </section>
+
+        <section class="actions">
+          <button id="calc" class="primary">Calculate</button>
+          <button id="clear" class="secondary">Clear inputs</button>
+          <button id="export" class="secondary">Export HTML</button>
+        </section>
+
+        <section class="results">
+          <div class="result">
+            <div class="rLabel">Bore area</div>
+            <div id="areaB" class="rVal">--</div>
+          </div>
+          <div class="result">
+            <div class="rLabel">Rod annulus area</div>
+            <div id="areaR" class="rVal">--</div>
+          </div>
+          <div class="result">
+            <div class="rLabel">Piston speed</div>
+            <div id="speed" class="rVal">--</div>
+          </div>
+          <div class="result">
+            <div class="rLabel">Bore flow (L/min)</div>
+            <div id="flowB" class="rVal">--</div>
+          </div>
+          <div class="result">
+            <div class="rLabel">Rod flow (L/min)</div>
+            <div id="flowR" class="rVal">--</div>
+          </div>
+          <div class="result">
+            <div class="rLabel">Effective extension flow (L/min)</div>
+            <div id="flowEff" class="rVal">--</div>
+          </div>
+          <div class="result">
+            <div class="rLabel">Total flow (L/min) — all cylinders</div>
+            <div id="flowT" class="rVal">--</div>
+          </div>
+          <div class="result">
+            <div class="rLabel">Force (kN)</div>
+            <div id="forceOut" class="rVal">--</div>
+          </div>
+          <div class="result">
+            <div class="rLabel">Pressure required (bar)</div>
+            <div id="pressureOut" class="rVal">--</div>
+          </div>
+          <div class="result">
+            <div class="rLabel">Hydraulic power (kW)</div>
+            <div id="power" class="rVal">--</div>
+          </div>
+        </section>
+
+        <div class="notes">
+          <strong>Notes:</strong>
+          <ul>
+            <li>Areas use π·D²/4. Flow L/min = area(m²) × speed(m/min) × 1000. Power(kW) = Pressure(bar) × Flow(L/min) / 600 / (efficiency).</li>
+            <li>Regeneration mode adds rod return flow to bore flow for extension (approximation).</li>
+            <li>Password stored locally in the browser (client-side). For stronger security use server authentication.</li>
+          </ul>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div>Prepared for <strong>manifolddesign</strong>. Host on GitHub Pages at <code>https://manifolddesign.github.io/manifold/</code></div>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
