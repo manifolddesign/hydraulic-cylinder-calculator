@@ -1,67 +1,104 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cylinder Calculation | Design Hydraulics</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cylinder Calculator | Design Hydraulics</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>Cylinder Calculation</h1>
+  <header class="topbar">
+    <div class="title">Cylinder Calculator</div>
+    <div class="subtitle">Design Hydraulics</div>
   </header>
 
-  <main>
-    <section class="card">
-      <h2>Bore Side</h2>
-      <label>Stroke (mm)<input type="number" id="boreStroke"></label>
-      <label>Time <select id="boreTimeUnit">
-        <option value="s">sec</option>
-        <option value="mm/s">mm/s</option>
-        <option value="m/min">m/min</option>
-        <option value="m/s">m/s</option>
-      </select><input type="number" id="boreTime"></label>
-      <label>Pressure (bar)<input type="number" id="borePressure"></label>
-      <label>Force (kN)<input type="number" id="boreForce"></label>
-      <div class="result-box">Flow: <span id="boreFlowResult">0</span> LPM</div>
-      <div class="result-box">Power: <span id="borePowerResult">0</span> kW</div>
-    </section>
+  <div class="container">
+    <div id="lock" class="modal">
+      <div class="modal-card">
+        <h2>Protected</h2>
+        <p>Enter password to unlock</p>
+        <input id="pwd" type="password" placeholder="Password">
+        <div class="row">
+          <button id="unlock" class="btn primary">Unlock</button>
+          <button id="changePwd" class="btn">Change</button>
+        </div>
+        <p class="muted">Default password stored locally. For strong security use server auth.</p>
+      </div>
+    </div>
 
-    <section class="card">
-      <h2>Rod Side</h2>
-      <label>Stroke (mm)<input type="number" id="rodStroke"></label>
-      <label>Time <select id="rodTimeUnit">
-        <option value="s">sec</option>
-        <option value="mm/s">mm/s</option>
-        <option value="m/min">m/min</option>
-        <option value="m/s">m/s</option>
-      </select><input type="number" id="rodTime"></label>
-      <label>Pressure (bar)<input type="number" id="rodPressure"></label>
-      <label>Force (kN)<input type="number" id="rodForce"></label>
-      <div class="result-box">Flow: <span id="rodFlowResult">0</span> LPM</div>
-      <div class="result-box">Power: <span id="rodPowerResult">0</span> kW</div>
-    </section>
-  </main>
+    <main id="app" style="display:none">
+      <section class="grid">
+        <div class="card side">
+          <h3>Bore Side</h3>
+          <div class="field"><label>Bore diameter <span class="unit">mm</span></label><input id="boreDia" type="number" step="0.01" value="320"></div>
+          <div class="field"><label>Stroke <span class="unit">mm</span></label><input id="stroke" type="number" step="0.1" value="1500"></div>
+          <div class="field inline"><label>Time unit</label>
+            <select id="timeUnitB">
+              <option value="sec">sec (time to complete stroke)</option>
+              <option value="mmsec">mm/sec</option>
+              <option value="msec">m/sec</option>
+              <option value="mmin">m/min</option>
+            </select>
+            <input id="timeValB" type="number" step="0.01" placeholder="value">
+          </div>
+          <div class="field inline"><label>Input</label>
+            <select id="pfModeB"><option value="pressure">Pressure (bar)</option><option value="force">Force (kN)</option></select>
+            <input id="pfValB" type="number" step="0.001" placeholder="enter value">
+          </div>
 
-  <div class="regeneration">
-    <label class="switch">
-      <input type="checkbox" id="regenToggle">
-      <span class="slider"></span>
-    </label>
-    Regeneration (Bore Power Only)
+          <div class="results">
+            <div class="res"><div class="label">Bore area</div><div id="areaB" class="value">-- mm²</div></div>
+            <div class="res"><div class="label">Bore speed</div><div id="speedB" class="value">-- mm/s • -- m/s • -- m/min</div></div>
+            <div class="res"><div class="label">Bore time</div><div id="timeOutB" class="value">-- s</div></div>
+            <div class="res highlight"><div class="label">Bore flow (per cyl)</div><div id="flowB" class="value">-- L/min</div></div>
+            <div class="res highlight"><div class="label">Total bore flow</div><div id="flowBtot" class="value">-- L/min</div></div>
+            <div class="res highlight"><div class="label">Bore pressure</div><div id="pressureB" class="value">-- bar</div></div>
+            <div class="res highlight"><div class="label">Bore force</div><div id="forceB" class="value">-- kN</div></div>
+            <div class="res highlight"><div class="label">Bore power (per cyl)</div><div id="powerB" class="value">-- kW</div></div>
+            <div class="res highlight"><div class="label">Bore power (total)</div><div id="powerBtot" class="value">-- kW</div></div>
+          </div>
+        </div>
+
+        <div class="card side">
+          <h3>Rod Side</h3>
+          <div class="field"><label>Rod diameter <span class="unit">mm</span></label><input id="rodDia" type="number" step="0.01" value="220"></div>
+          <div class="field inline"><label>Time unit</label>
+            <select id="timeUnitR">
+              <option value="sec">sec (time to complete stroke)</option>
+              <option value="mmsec">mm/sec</option>
+              <option value="msec">m/sec</option>
+              <option value="mmin">m/min</option>
+            </select>
+            <input id="timeValR" type="number" step="0.01" placeholder="value">
+          </div>
+          <div class="field inline"><label>Input</label>
+            <select id="pfModeR"><option value="pressure">Pressure (bar)</option><option value="force">Force (kN)</option></select>
+            <input id="pfValR" type="number" step="0.001" placeholder="enter value">
+          </div>
+
+          <div class="results">
+            <div class="res"><div class="label">Rod area</div><div id="areaR" class="value">-- mm²</div></div>
+            <div class="res"><div class="label">Rod speed</div><div id="speedR" class="value">-- mm/s • -- m/s • -- m/min</div></div>
+            <div class="res"><div class="label">Rod time</div><div id="timeOutR" class="value">-- s</div></div>
+            <div class="res highlight"><div class="label">Rod flow (per cyl)</div><div id="flowR" class="value">-- L/min</div></div>
+            <div class="res highlight"><div class="label">Total rod flow</div><div id="flowRtot" class="value">-- L/min</div></div>
+            <div class="res highlight"><div class="label">Rod pressure</div><div id="pressureR" class="value">-- bar</div></div>
+            <div class="res highlight"><div class="label">Rod force</div><div id="forceR" class="value">-- kN</div></div>
+            <div class="res highlight"><div class="label">Rod power (per cyl)</div><div id="powerR" class="value">-- kW</div></div>
+            <div class="res highlight"><div class="label">Rod power (total)</div><div id="powerRtot" class="value">-- kW</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="controls">
+        <div class="field small"><label>No. of cylinders</label><input id="nCyl" type="number" value="1" min="1"></div>
+        <div class="field small switchRow"><label>Regeneration</label><label class="switch"><input id="regen" type="checkbox"><span class="slider"></span></label></div>
+        <div class="actions"><button id="calcBtn" class="btn primary">Calculate</button><button id="resetBtn" class="btn">Reset</button></div>
+      </section>
+
+      <footer class="footer">© Design Hydraulics@2025 | All Rights Reserved</footer>
+    </main>
   </div>
-
-  <div class="total-power">
-    Total Power: <span id="totalPower">0</span> kW
-  </div>
-
-  <div class="buttons">
-    <button onclick="resetForm()">Reset</button>
-  </div>
-
-  <footer>
-    © Design Hydraulics@2025 | All Rights Reserved
-  </footer>
 
   <script src="script.js"></script>
 </body>
