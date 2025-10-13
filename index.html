@@ -1,87 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cylinder Calculation - Manifold</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cylinder Calculation | Design Hydraulics</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="login-box">
-    <h2>Password Protected</h2>
-    <input type="password" id="password" placeholder="Enter Password">
-    <button onclick="checkPassword()">Enter</button>
-</div>
-
-<div id="calculator" style="display:none;">
+  <header>
     <h1>Cylinder Calculation</h1>
-    <div class="grid">
-        <div><label>Bore Dia (mm)</label><input type="number" id="boreDia"></div>
-        <div><label>Rod Dia (mm)</label><input type="number" id="rodDia"></div>
-        <div><label>Stroke (mm)</label><input type="number" id="stroke"></div>
-        <div><label>No. of Cylinders</label><input type="number" id="cylinders" value="1"></div>
+  </header>
 
-        <div><label>Time Option</label>
-            <select id="timeUnitBore">
-                <option value="sec">sec</option>
-                <option value="mm/s">mm/sec</option>
-                <option value="m/s">m/sec</option>
-                <option value="m/min">m/min</option>
-            </select>
-        </div>
-        <div><label>Bore Time/Speed</label><input type="number" id="timeValueBore"></div>
+  <main>
+    <section class="card">
+      <h2>Bore Side</h2>
+      <label>Stroke (mm)<input type="number" id="boreStroke"></label>
+      <label>Time <select id="boreTimeUnit">
+        <option value="s">sec</option>
+        <option value="mm/s">mm/s</option>
+        <option value="m/min">m/min</option>
+        <option value="m/s">m/s</option>
+      </select><input type="number" id="boreTime"></label>
+      <label>Pressure (bar)<input type="number" id="borePressure"></label>
+      <label>Force (kN)<input type="number" id="boreForce"></label>
+      <div class="result-box">Flow: <span id="boreFlowResult">0</span> LPM</div>
+      <div class="result-box">Power: <span id="borePowerResult">0</span> kW</div>
+    </section>
 
-        <div><label>Time Option</label>
-            <select id="timeUnitRod">
-                <option value="sec">sec</option>
-                <option value="mm/s">mm/sec</option>
-                <option value="m/s">m/sec</option>
-                <option value="m/min">m/min</option>
-            </select>
-        </div>
-        <div><label>Rod Time/Speed</label><input type="number" id="timeValueRod"></div>
+    <section class="card">
+      <h2>Rod Side</h2>
+      <label>Stroke (mm)<input type="number" id="rodStroke"></label>
+      <label>Time <select id="rodTimeUnit">
+        <option value="s">sec</option>
+        <option value="mm/s">mm/s</option>
+        <option value="m/min">m/min</option>
+        <option value="m/s">m/s</option>
+      </select><input type="number" id="rodTime"></label>
+      <label>Pressure (bar)<input type="number" id="rodPressure"></label>
+      <label>Force (kN)<input type="number" id="rodForce"></label>
+      <div class="result-box">Flow: <span id="rodFlowResult">0</span> LPM</div>
+      <div class="result-box">Power: <span id="rodPowerResult">0</span> kW</div>
+    </section>
+  </main>
 
-        <div><label>Bore Pressure/Force Option</label>
-            <select id="pfOptionBore">
-                <option value="pressure">Pressure</option>
-                <option value="force">Force</option>
-            </select>
-        </div>
-        <div><label>Bore Pressure (bar) / Force (kN)</label><input type="number" id="pfValueBore"></div>
+  <div class="regeneration">
+    <label class="switch">
+      <input type="checkbox" id="regenToggle">
+      <span class="slider"></span>
+    </label>
+    Regeneration (Bore Power Only)
+  </div>
 
-        <div><label>Rod Pressure/Force Option</label>
-            <select id="pfOptionRod">
-                <option value="pressure">Pressure</option>
-                <option value="force">Force</option>
-            </select>
-        </div>
-        <div><label>Rod Pressure (bar) / Force (kN)</label><input type="number" id="pfValueRod"></div>
+  <div class="total-power">
+    Total Power: <span id="totalPower">0</span> kW
+  </div>
 
-        <div><label>Regeneration</label><input type="checkbox" id="regen"></div>
-    </div>
+  <div class="buttons">
+    <button onclick="resetForm()">Reset</button>
+  </div>
 
-    <button onclick="calculate()">Calculate</button>
+  <footer>
+    © Design Hydraulics@2025 | All Rights Reserved
+  </footer>
 
-    <h2>Results</h2>
-    <div class="results">
-        <p>Bore Area: <span id="boreArea"></span> mm²</p>
-        <p>Rod Area: <span id="rodArea"></span> mm²</p>
-        <p>Bore Speed: <span id="boreSpeed"></span></p>
-        <p>Rod Speed: <span id="rodSpeed"></span></p>
-        <p>Bore Time: <span id="boreTime"></span> sec</p>
-        <p>Rod Time: <span id="rodTime"></span> sec</p>
-        <p>Bore Flow: <span id="boreFlow"></span> LPM</p>
-        <p>Rod Flow: <span id="rodFlow"></span> LPM</p>
-        <p>Total Bore Flow: <span id="totalBoreFlow"></span> LPM</p>
-        <p>Total Rod Flow: <span id="totalRodFlow"></span> LPM</p>
-        <p>Bore Pressure: <span id="borePressure"></span> bar</p>
-        <p>Bore Force: <span id="boreForce"></span> kN</p>
-        <p>Rod Pressure: <span id="rodPressure"></span> bar</p>
-        <p>Rod Force: <span id="rodForce"></span> kN</p>
-        <p>Bore Power: <span id="borePower"></span> kW</p>
-        <p>Rod Power: <span id="rodPower"></span> kW</p>
-    </div>
-</div>
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
