@@ -21,13 +21,13 @@
 
     <div class="top-row">
       <label>No. of Cylinders: <input type="number" id="numCylinders" value="1" min="1" /></label>
+      <label>Stroke (mm): <input type="number" id="stroke" value="1500" /></label>
     </div>
 
     <div class="columns">
       <section class="card">
         <h2>Bore Side</h2>
         <label>Bore Diameter (mm): <input type="number" id="boreDia" value="320" /></label>
-        <label>Stroke (mm): <input type="number" id="boreStroke" value="1500" /></label>
         <label>Time unit: 
           <select id="boreTimeUnit">
             <option value="sec">sec (time to complete stroke)</option>
@@ -56,7 +56,6 @@
       <section class="card">
         <h2>Rod Side</h2>
         <label>Rod Diameter (mm): <input type="number" id="rodDia" value="220" /></label>
-        <label>Stroke (mm): <input type="number" id="rodStroke" value="1500" /></label>
         <label>Time unit: 
           <select id="rodTimeUnit">
             <option value="sec">sec (time to complete stroke)</option>
@@ -70,7 +69,8 @@
         <label>Force (kN): <input type="number" id="rodForce" step="0.01" /></label>
 
         <div class="results">
-          <div class="res"><div class="label">Rod area (rod cross-section)</div><div id="areaR" class="value">-- mm²</div></div>
+          <div class="res"><div class="label">Rod cross area</div><div id="areaR" class="value">-- mm²</div></div>
+          <div class="res"><div class="label">Annular area (bore - rod)</div><div id="areaAnn" class="value">-- mm²</div></div>
           <div class="res"><div class="label">Rod speed</div><div id="speedR" class="value">-- mm/s • -- m/s • -- m/min</div></div>
           <div class="res"><div class="label">Rod time (s)</div><div id="timeOutR" class="value">-- s</div></div>
           <div class="res highlight"><div class="label">Rod flow (per cyl)</div><div id="flowR" class="value">-- L/min</div></div>
