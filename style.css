@@ -6,26 +6,30 @@ body {
   padding: 0;
 }
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  text-align: center;
   background-color: #007bff;
   color: #fff;
   padding: 10px 20px;
 }
-.reset-btn {
-  background-color: #fff;
-  color: #007bff;
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 20px 0;
+}
+.action-btn {
+  background-color: #007bff;
+  color: #fff;
   border: none;
-  padding: 8px 12px;
+  padding: 10px 20px;
   font-size: 14px;
   font-weight: bold;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.3s;
 }
-.reset-btn:hover {
-  background-color: #e3e3e3;
+.action-btn:hover {
+  background-color: #0056b3;
 }
 footer {
   text-align: center;
