@@ -1,42 +1,21 @@
-
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f8f9fc;
-  margin: 0;
-  padding: 0;
-}
-.header {
-  text-align: center;
-  background-color: #007bff;
-  color: #fff;
-  padding: 10px 20px;
-}
-.button-container {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin: 20px 0;
-}
-.action-btn {
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: bold;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-.action-btn:hover {
-  background-color: #0056b3;
-}
-footer {
-  text-align: center;
-  padding: 10px;
-  background: #007bff;
-  color: white;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-}
+body{font-family:Arial,sans-serif;background:#f3f7fb;margin:0;color:#0b1724}
+.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.4)}
+.modal-content{background:#fff;padding:20px;border-radius:8px;text-align:center;width:320px}
+.container{max-width:1100px;margin:20px auto;padding:20px}
+h1{text-align:center;color:#1e88e5}
+.columns{display:flex;gap:18px;flex-wrap:wrap}
+.card{background:#fff;padding:16px;border-radius:10px;flex:1;min-width:320px;box-shadow:0 8px 24px rgba(11,20,34,0.05)}
+label{display:block;margin-top:8px;color:#64748b}
+input[type=number],select{width:100%;padding:8px;border-radius:6px;border:1px solid #e6eef8;margin-top:6px}
+.results{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.highlight{background:#e3f2fd;padding:8px;border-radius:8px}
+.controls{display:flex;align-items:center;gap:12px;margin-top:14px}
+.actions{margin-left:auto;display:flex;gap:8px}
+button{background:#1e88e5;color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
+.switch input{display:none}
+.switch .slider{width:46px;height:26px;background:#dfe7ef;border-radius:26px;display:inline-block;position:relative}
+.switch .slider:after{content:'';width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;left:3px;top:3px;transition:0.2s}
+.switch input:checked + .slider{background:#1e88e5}
+.switch input:checked + .slider:after{transform:translateX(20px)}
+footer{text-align:center;margin-top:20px;color:#6b7280;padding:12px}
+@media(max-width:900px){.columns{flex-direction:column}.results{grid-template-columns:1fr}}
