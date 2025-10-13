@@ -3,83 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Design Hydraulics - Cylinder Calculation</title>
+  <title>Design Hydraulics @2025</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="passwordModal" class="modal">
-    <div class="modal-content">
-      <h2>Password Required</h2>
-      <input type="password" id="passwordInput" placeholder="Enter Password" />
-      <button onclick="checkPassword()">Login</button>
-      <p id="errorMsg"></p>
-    </div>
-  </div>
+  <header class="header">
+    <h1>Design Hydraulics @2025</h1>
+    <button id="resetBtn" class="reset-btn">🧼 Reset</button>
+  </header>
 
-  <div class="container" id="calcApp" style="display:none;">
-    <h1>Hydraulic Cylinder Calculator</h1>
+  <main>
+    <div id="app"></div>
+  </main>
 
-    <div class="input-section">
-      <label>No. of Cylinders:</label>
-      <input type="number" id="numCylinders" value="1" min="1" />
+  <footer>© Design Hydraulics@2025 | All Rights Reserved</footer>
 
-      <label>Bore Diameter (mm):</label>
-      <input type="number" id="boreDia" value="100" />
-
-      <label>Rod Diameter (mm):</label>
-      <input type="number" id="rodDia" value="50" />
-
-      <label>Stroke (mm):</label>
-      <input type="number" id="stroke" value="500" />
-
-      <label>Time Unit:</label>
-      <select id="timeUnit">
-        <option value="sec">sec</option>
-        <option value="mm/sec">mm/sec</option>
-        <option value="m/sec">m/sec</option>
-        <option value="m/min">m/min</option>
-      </select>
-
-      <label>Time Value:</label>
-      <input type="number" id="timeValue" value="5" />
-
-      <div class="toggle">
-        <label>Regeneration:</label>
-        <input type="checkbox" id="regenToggle">
-      </div>
-    </div>
-
-    <div class="calculation-section">
-      <h2>Bore Side</h2>
-      <label>Pressure (bar):</label>
-      <input type="number" id="borePressure" oninput="updateFromPressure('bore')" />
-      <label>Force (kN):</label>
-      <input type="number" id="boreForce" oninput="updateFromForce('bore')" />
-
-      <div class="result-box">
-        <p>Bore Flow (L/min): <span id="boreFlow">0</span></p>
-        <p>Total Bore Flow (L/min): <span id="totalBoreFlow">0</span></p>
-        <p>Bore Power (kW): <span id="borePower">0</span></p>
-      </div>
-    </div>
-
-    <div class="calculation-section">
-      <h2>Rod Side</h2>
-      <label>Pressure (bar):</label>
-      <input type="number" id="rodPressure" oninput="updateFromPressure('rod')" />
-      <label>Force (kN):</label>
-      <input type="number" id="rodForce" oninput="updateFromForce('rod')" />
-
-      <div class="result-box">
-        <p>Rod Flow (L/min): <span id="rodFlow">0</span></p>
-        <p>Total Rod Flow (L/min): <span id="totalRodFlow">0</span></p>
-        <p>Rod Power (kW): <span id="rodPower">0</span></p>
-      </div>
-    </div>
-
-    <button onclick="exportToExcel()">📤 Export to Excel</button>
-    <footer>© Design Hydraulics@2025 | All Rights Reserved</footer>
-  </div>
   <script src="script.js"></script>
 </body>
 </html>
