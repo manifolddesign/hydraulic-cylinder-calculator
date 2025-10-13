@@ -1,6 +1,6 @@
 // Password (client-side)
 const PWD_KEY = 'dh_pwd_v5';
-const DEFAULT_PWD = 'Design Hydraulics@2025';
+const DEFAULT_PWD = 'Manifold@2025';
 function hash(s){let h=2166136261; for(let i=0;i<s.length;i++){h ^= s.charCodeAt(i); h += (h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24);} return (h>>>0).toString(16);}
 if(!localStorage.getItem(PWD_KEY)) localStorage.setItem(PWD_KEY, hash(DEFAULT_PWD));
 
