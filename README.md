@@ -1,4 +1,4 @@
-# Cylinder Calculation Web Tool - Manifold
+# Cylinder Calculation Web Tool
 
 This tool replicates the Excel logic for hydraulic cylinder calculations in a web interface.
 
