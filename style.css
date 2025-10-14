@@ -34,3 +34,36 @@ input[type=number],select{padding:10px;border-radius:8px;border:1px solid #e6eef
 .final-value{font-size:20px;font-weight:800;color:#0b1724}
 .footer{margin-top:24px;text-align:center;color:#6b7280;padding:18px}
 @media(max-width:900px){.columns{flex-direction:column}.results{grid-template-columns:1fr}.final-box{flex-direction:column}}
+
+/* Footer - bottom centered for desktop, fixed for mobile */
+footer {
+  text-align: center;
+  color: #64748b;
+  padding: 18px 0;
+  font-size: 14px;
+  margin-top: 40px;
+}
+
+/* Mobile-specific footer behavior */
+@media(max-width:600px){
+  .inputs-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .field.small {
+    min-width: 100%;
+  }
+
+  footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #f3f7fb;
+    color: #64748b;
+    padding: 10px 0;
+    font-size: 13px;
+    border-top: 1px solid #e0e0e0;
+  }
+}
