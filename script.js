@@ -100,11 +100,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // reset logic
   document.getElementById('resetBtn').addEventListener('click', ()=>{
-    document.querySelectorAll('input[type=number]').forEach(i=> i.value = '');
-    document.getElementById('nCyl').value = 1;
-    document.getElementById('stroke').value = 1500;
-    document.getElementById('boreDia').value = 320;
-    document.getElementById('rodDia').value = 220;
+    // Clear all input values (numbers, text, and password)
+    document.querySelectorAll('input[type=number], input[type=text], input[type=password]').forEach(i=> i.value = '');
+    document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+    document.getElementById('regen').checked = false;
+
+    // Reset displayed outputs
+    document.querySelectorAll('.output').forEach(o => o.textContent = '--');
+
     computeAll();
   });
 
