@@ -67,3 +67,11 @@ footer {
     border-top: 1px solid #e0e0e0;
   }
 }
+
+
+/* Increase zoom for mobile view */
+@media(max-width:600px){
+  body {
+    zoom: 1.15;
+  }
+}
