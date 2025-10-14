@@ -1,215 +1,122 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Design Hydraulics @2025</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    header {
-      background: #004080;
-      color: white;
-      padding: 10px;
-      text-align: center;
-      font-size: 1.5rem;
-    }
-    .container {
-      flex: 1;
-      max-width: 1200px;
-      margin: 20px auto;
-      background: white;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      border-radius: 10px;
-    }
-    .input-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-    .input-group label {
-      flex: 1 1 150px;
-      min-width: 150px;
-    }
-    .input-group input, .input-group select {
-      flex: 2 1 200px;
-      padding: 8px;
-    }
-    .buttons {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    button {
-      padding: 10px 15px;
-      background: #004080;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0066cc;
-    }
-    .results {
-      margin-top: 20px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .result-box {
-      background: #e9f1ff;
-      padding: 10px;
-      border-radius: 5px;
-    }
-    .highlight {
-      background: #ffe6b3;
-      font-weight: bold;
-    }
-    footer {
-      background: #004080;
-      color: white;
-      text-align: center;
-      padding: 10px;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      font-size: 0.9rem;
-    }
-    @media (max-width: 768px) {
-      .results {
-        grid-template-columns: 1fr;
-      }
-      .input-group {
-        flex-direction: column;
-      }
-      .buttons {
-        justify-content: center;
-      }
-    }
-  </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hydraulic Cylinder Calculator</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>Hydraulic Cylinder Calculator</header>
-  <div class="container">
-    <div class="input-group">
-      <label for="bore">Bore Diameter (mm)</label>
-      <input type="number" id="bore" placeholder="Enter bore dia">
-    </div>
-    <div class="input-group">
-      <label for="rod">Rod Diameter (mm)</label>
-      <input type="number" id="rod" placeholder="Enter rod dia">
-    </div>
-    <div class="input-group">
-      <label for="stroke">Stroke (mm)</label>
-      <input type="number" id="stroke" placeholder="Enter stroke">
-    </div>
-    <div class="input-group">
-      <label for="pressure">Pressure (bar)</label>
-      <input type="number" id="pressure" placeholder="Enter pressure">
-    </div>
-    <div class="input-group">
-      <label for="time">Time (sec)</label>
-      <input type="number" id="time" placeholder="Enter time">
-    </div>
-    <div class="input-group">
-      <label for="cylinders">No. of Cylinders</label>
-      <input type="number" id="cylinders" placeholder="Enter no. of cylinders" value="1">
-    </div>
-    <div class="buttons">
-      <button onclick="resetAll()">Reset</button>
-      <button onclick="exportToExcel()">Export to Excel</button>
-    </div>
-    <div class="results">
-      <div class="result-box">
-        <p>Bore Area: <span id="boreArea"></span> cm²</p>
-        <p>Bore Flow (per cyl): <span id="boreFlow"></span> L/min</p>
-        <p>Total Bore Flow: <span id="totalBoreFlow"></span> L/min</p>
-        <p>Bore Power: <span id="borePower"></span> kW</p>
+  <!-- Password Modal -->
+  <div id="pwdOverlay" class="overlay">
+    <div class="modal">
+      <h2>Enter Password</h2>
+      <input id="pwdInput" type="password" placeholder="Password" />
+      <div class="modal-actions">
+        <button id="pwdBtn">Unlock</button>
       </div>
-      <div class="result-box">
-        <p>Rod Area: <span id="rodArea"></span> cm²</p>
-        <p>Rod Flow (per cyl): <span id="rodFlow"></span> L/min</p>
-        <p>Total Rod Flow: <span id="totalRodFlow"></span> L/min</p>
-        <p>Rod Power: <span id="rodPower"></span> kW</p>
-      </div>
+      <p id="pwdError" class="muted"></p>
     </div>
   </div>
-  <footer>© Design Hydraulics 2025</footer>
 
-  <script>
-    const inputs = document.querySelectorAll('input');
-    inputs.forEach(input => input.addEventListener('input', calculate));
+  <div class="topbar">
+    <div class="brand">Design Hydraulics</div>
+    <div class="top-actions">
+      <button id="exportBtn" class="btn">Export to Excel</button>
+      <button id="resetBtn" class="btn outline">Reset</button>
+    </div>
+  </div>
 
-    function calculate() {
-      const bore = parseFloat(document.getElementById('bore').value) || 0;
-      const rod = parseFloat(document.getElementById('rod').value) || 0;
-      const stroke = parseFloat(document.getElementById('stroke').value) || 0;
-      const pressure = parseFloat(document.getElementById('pressure').value) || 0;
-      const time = parseFloat(document.getElementById('time').value) || 0;
-      const cylinders = parseInt(document.getElementById('cylinders').value) || 1;
+  <div class="container" id="app" style="display:none">
+    <h1>Hydraulic Cylinder Calculator</h1>
 
-      const boreArea = Math.PI * (Math.pow(bore/2, 2)) / 100; // cm²
-      const rodArea = Math.PI * (Math.pow(bore/2, 2) - Math.pow(rod/2, 2)) / 100; // cm²
+    <div class="row inputs-row">
+      <div class="field small"><label>No. of cylinders</label><input id="nCyl" type="number" min="1" value="1"></div>
+      <div class="field small"><label>Stroke (mm)</label><input id="stroke" type="number" value="1500"></div>
+      <div class="field small switchRow"><label>Regeneration</label><label class="switch"><input id="regen" type="checkbox"><span class="slider"></span></label></div>
+    </div>
 
-      const boreVol = boreArea * stroke; 
-      const rodVol = rodArea * stroke;
+    <div class="columns">
+      <!-- Bore Card -->
+      <section class="card">
+        <h2>Bore Side</h2>
+        <div class="field"><label>Bore diameter (mm)</label><input id="boreDia" type="number" value="320" step="0.01"></div>
+        <div class="field inline"><label>Time unit</label>
+          <select id="timeUnitB">
+            <option value="sec">sec (time to complete stroke)</option>
+            <option value="mmsec">mm/sec</option>
+            <option value="msec">m/sec</option>
+            <option value="mmin">m/min</option>
+          </select>
+          <input id="timeValB" type="number" step="0.01" placeholder="value">
+        </div>
+        <div class="field inline"><label>Input</label>
+          <select id="pfModeB"><option value="pressure">Pressure (bar)</option><option value="force">Force (kN)</option></select>
+          <input id="pfValB" type="number" step="0.001" placeholder="enter value">
+        </div>
 
-      const boreFlow = time > 0 ? (boreVol / time) * 0.06 : 0; 
-      const rodFlow = time > 0 ? (rodVol / time) * 0.06 : 0;
+        <div class="results">
+          <div class="res"><div class="label">Bore area</div><div id="areaB" class="value output">--</div></div>
+          <div class="res"><div class="label">Bore speed</div><div id="speedB" class="value output">--</div></div>
+          <div class="res"><div class="label">Bore time</div><div id="timeOutB" class="value output">--</div></div>
+          <div class="res highlight"><div class="label">Bore flow (per cyl)</div><div id="flowB" class="value output">--</div></div>
+          <div class="res highlight"><div class="label">Total bore flow</div><div id="flowBtot" class="value output">--</div></div>
+          <div class="res"><div class="label">Bore pressure</div><div id="pressureB" class="value output">--</div></div>
+          <div class="res"><div class="label">Bore force</div><div id="forceB" class="value output">--</div></div>
+          <div class="res"><div class="label">Bore power (per cyl)</div><div id="powerB" class="value output">--</div></div>
+          <div class="res final bore-final"><div class="label">Bore power (total)</div><div id="powerBtot" class="value output">-- kW</div></div>
+        </div>
+      </section>
 
-      const totalBoreFlow = boreFlow * cylinders;
-      const totalRodFlow = rodFlow * cylinders;
+      <!-- Rod Card -->
+      <section class="card">
+        <h2>Rod Side</h2>
+        <div class="field"><label>Rod diameter (mm)</label><input id="rodDia" type="number" value="220" step="0.01"></div>
+        <div class="field inline"><label>Time unit</label>
+          <select id="timeUnitR">
+            <option value="sec">sec (time to complete stroke)</option>
+            <option value="mmsec">mm/sec</option>
+            <option value="msec">m/sec</option>
+            <option value="mmin">m/min</option>
+          </select>
+          <input id="timeValR" type="number" step="0.01" placeholder="value">
+        </div>
+        <div class="field inline"><label>Input</label>
+          <select id="pfModeR"><option value="pressure">Pressure (bar)</option><option value="force">Force (kN)</option></select>
+          <input id="pfValR" type="number" step="0.001" placeholder="enter value">
+        </div>
 
-      const borePower = (totalBoreFlow * pressure) / 600;
-      const rodPower = (totalRodFlow * pressure) / 600;
+        <div class="results">
+          <div class="res"><div class="label">Rod cross area</div><div id="areaR" class="value output">--</div></div>
+          <div class="res"><div class="label">Annular area (bore - rod)</div><div id="areaAnn" class="value output">--</div></div>
+          <div class="res"><div class="label">Rod speed</div><div id="speedR" class="value output">--</div></div>
+          <div class="res"><div class="label">Rod time</div><div id="timeOutR" class="value output">--</div></div>
+          <div class="res highlight"><div class="label">Rod flow (per cyl)</div><div id="flowR" class="value output">--</div></div>
+          <div class="res highlight"><div class="label">Total rod flow</div><div id="flowRtot" class="value output">--</div></div>
+          <div class="res"><div class="label">Rod pressure</div><div id="pressureR" class="value output">--</div></div>
+          <div class="res"><div class="label">Rod force</div><div id="forceR" class="value output">--</div></div>
+          <div class="res"><div class="label">Rod power (per cyl)</div><div id="powerR" class="value output">--</div></div>
+          <div class="res final rod-final"><div class="label">Rod power (total)</div><div id="powerRtot" class="value output">-- kW</div></div>
+        </div>
+      </section>
+    </div>
 
-      document.getElementById('boreArea').innerText = boreArea.toFixed(2);
-      document.getElementById('rodArea').innerText = rodArea.toFixed(2);
-      document.getElementById('boreFlow').innerText = boreFlow.toFixed(2);
-      document.getElementById('rodFlow').innerText = rodFlow.toFixed(2);
-      document.getElementById('totalBoreFlow').innerText = totalBoreFlow.toFixed(2);
-      document.getElementById('totalRodFlow').innerText = totalRodFlow.toFixed(2);
-      document.getElementById('borePower').innerText = borePower.toFixed(2);
-      document.getElementById('rodPower').innerText = rodPower.toFixed(2);
-    }
+    <div class="final-box">
+      <div class="final-inner bore-box">
+        <div class="final-label">Bore Power Total</div>
+        <div id="finalBore" class="final-value">-- kW</div>
+      </div>
+      <div class="final-inner rod-box">
+        <div class="final-label">Rod Power Total</div>
+        <div id="finalRod" class="final-value">-- kW</div>
+      </div>
+    </div>
 
-    function resetAll() {
-      inputs.forEach(input => input.value = '');
-      document.getElementById('cylinders').value = 1;
-      document.querySelectorAll('span').forEach(span => span.innerText = '');
-    }
+    <footer>© Design Hydraulics@2025 | All Rights Reserved</footer>
+  </div>
 
-    function exportToExcel() {
-      const rows = [
-        ["Parameter","Bore Side","Rod Side"],
-        ["Area (cm²)", document.getElementById('boreArea').innerText, document.getElementById('rodArea').innerText],
-        ["Flow per cyl (L/min)", document.getElementById('boreFlow').innerText, document.getElementById('rodFlow').innerText],
-        ["Total Flow (L/min)", document.getElementById('totalBoreFlow').innerText, document.getElementById('totalRodFlow').innerText],
-        ["Power (kW)", document.getElementById('borePower').innerText, document.getElementById('rodPower').innerText],
-      ];
-      let csvContent = "data:text/csv;charset=utf-8," 
-        + rows.map(e => e.join(",")).join("\n");
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "hydraulic_calculation.csv");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  </script>
+  <!-- SheetJS for export -->
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
