@@ -1,113 +1,62 @@
-<!DOCTYPE html>
-
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
-<title>Hydraulic Cylinder Calculator</title>
-<link href="style.css" rel="stylesheet"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hydraulic Cylinder Calculator</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<!-- Password Modal -->
-<div class="overlay" id="pwdOverlay">
-<div class="modal">
-<h2>Enter Password</h2>
-<input id="pwdInput" placeholder="Password" type="password"/>
-<div class="modal-actions">
-<button id="pwdBtn">Unlock</button>
-</div>
-<p class="muted" id="pwdError"></p>
-</div>
-</div>
-<div class="topbar">
-<div class="brand">Design Hydraulics</div>
-<div class="top-actions">
-<button class="btn" id="exportBtn">Export to Excel</button>
-<button class="btn outline" id="resetBtn">Reset</button>
-</div>
-</div>
-<div class="container" id="app" style="display:none">
-<h1>Hydraulic Cylinder Calculator</h1>
-<div class="row inputs-row">
-<div class="field small"><label>No. of cylinders</label><input id="nCyl" min="1" type="number" value="1"/></div>
-<div class="field small"><label>Stroke (mm)</label><input id="stroke" type="number" value="1500"/></div>
-<div class="field small switchRow"><label>Regeneration</label><label class="switch"><input id="regen" type="checkbox"/><span class="slider"></span></label></div>
-</div>
-<div class="columns">
-<!-- Bore Card -->
-<section class="card">
-<h2>Bore Side</h2>
-<div class="field"><label>Bore diameter (mm)</label><input id="boreDia" step="0.01" type="number" value="320"/></div>
-<div class="field inline"><label>Time unit</label>
-<select id="timeUnitB">
-<option value="sec">sec (time to complete stroke)</option>
-<option value="mmsec">mm/sec</option>
-<option value="msec">m/sec</option>
-<option value="mmin">m/min</option>
-</select>
-<input id="timeValB" placeholder="value" step="0.01" type="number"/>
-</div>
-<div class="field inline"><label>Input</label>
-<select id="pfModeB"><option value="pressure">Pressure (bar)</option><option value="force">Force (kN)</option></select>
-<input id="pfValB" placeholder="enter value" step="0.001" type="number"/>
-</div>
-<div class="results">
-<div class="res"><div class="label">Bore area</div><div class="value output" id="areaB">--</div></div>
-<div class="res"><div class="label">Bore speed</div><div class="value output" id="speedB">--</div></div>
-<div class="res"><div class="label">Bore time</div><div class="value output" id="timeOutB">--</div></div>
-<div class="res highlight"><div class="label">Bore flow (per cyl)</div><div class="value output" id="flowB">--</div></div>
-<div class="res highlight"><div class="label">Total bore flow</div><div class="value output" id="flowBtot">--</div></div>
-<div class="res"><div class="label">Bore pressure</div><div class="value output" id="pressureB">--</div></div>
-<div class="res"><div class="label">Bore force</div><div class="value output" id="forceB">--</div></div>
-<div class="res"><div class="label">Bore power (per cyl)</div><div class="value output" id="powerB">--</div></div>
-<div class="res final bore-final"><div class="label">Bore power (total)</div><div class="value output" id="powerBtot">-- kW</div></div>
-</div>
-</section>
-<!-- Rod Card -->
-<section class="card">
-<h2>Rod Side</h2>
-<div class="field"><label>Rod diameter (mm)</label><input id="rodDia" step="0.01" type="number" value="220"/></div>
-<div class="field inline"><label>Time unit</label>
-<select id="timeUnitR">
-<option value="sec">sec (time to complete stroke)</option>
-<option value="mmsec">mm/sec</option>
-<option value="msec">m/sec</option>
-<option value="mmin">m/min</option>
-</select>
-<input id="timeValR" placeholder="value" step="0.01" type="number"/>
-</div>
-<div class="field inline"><label>Input</label>
-<select id="pfModeR"><option value="pressure">Pressure (bar)</option><option value="force">Force (kN)</option></select>
-<input id="pfValR" placeholder="enter value" step="0.001" type="number"/>
-</div>
-<div class="results">
-<div class="res"><div class="label">Rod cross area</div><div class="value output" id="areaR">--</div></div>
-<div class="res"><div class="label">Annular area (bore - rod)</div><div class="value output" id="areaAnn">--</div></div>
-<div class="res"><div class="label">Rod speed</div><div class="value output" id="speedR">--</div></div>
-<div class="res"><div class="label">Rod time</div><div class="value output" id="timeOutR">--</div></div>
-<div class="res highlight"><div class="label">Rod flow (per cyl)</div><div class="value output" id="flowR">--</div></div>
-<div class="res highlight"><div class="label">Total rod flow</div><div class="value output" id="flowRtot">--</div></div>
-<div class="res"><div class="label">Rod pressure</div><div class="value output" id="pressureR">--</div></div>
-<div class="res"><div class="label">Rod force</div><div class="value output" id="forceR">--</div></div>
-<div class="res"><div class="label">Rod power (per cyl)</div><div class="value output" id="powerR">--</div></div>
-<div class="res final rod-final"><div class="label">Rod power (total)</div><div class="value output" id="powerRtot">-- kW</div></div>
-</div>
-</section>
-</div>
-<div class="final-box">
-<div class="final-inner bore-box">
-<div class="final-label">Bore Power Total</div>
-<div class="final-value" id="finalBore">-- kW</div>
-</div>
-<div class="final-inner rod-box">
-<div class="final-label">Rod Power Total</div>
-<div class="final-value" id="finalRod">-- kW</div>
-</div>
-</div>
-<footer>© Design Hydraulics@2025 | All Rights Reserved</footer>
-</div>
-<!-- SheetJS for export -->
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-<script src="script.js"></script>
+  <div id="pwdOverlay" class="overlay">
+    <div class="modal">
+      <h2>Enter Password</h2>
+      <input id="pwdInput" type="password" placeholder="Password" />
+      <div class="modal-actions">
+        <button id="pwdBtn">Unlock</button>
+      </div>
+      <p id="pwdError" class="muted"></p>
+    </div>
+  </div>
+
+  <div class="topbar">
+    <div class="brand">Design Hydraulics</div>
+    <div class="top-actions">
+      <button id="exportBtn" class="btn">Export to Excel</button>
+      <button id="resetBtn" class="btn outline">Reset</button>
+    </div>
+  </div>
+
+  <div class="container" id="app" style="display:none">
+    <h1>Hydraulic Cylinder Calculator</h1>
+
+    <div class="columns">
+      <section class="card">
+        <h2>Bore Side</h2>
+        <div class="field"><label>Bore diameter (mm)</label><input id="boreDia" type="number" value="320"></div>
+        <div class="field"><label>Stroke (mm)</label><input id="stroke" type="number" value="1500"></div>
+      </section>
+      <section class="card">
+        <h2>Rod Side</h2>
+        <div class="field"><label>Rod diameter (mm)</label><input id="rodDia" type="number" value="220"></div>
+        <div class="field"><label>No. of Cylinders</label><input id="nCyl" type="number" value="1"></div>
+      </section>
+    </div>
+
+    <div class="final-box">
+      <div class="final-inner bore-box">
+        <div class="final-label">Bore Power Total</div>
+        <div id="finalBore" class="final-value">-- kW</div>
+      </div>
+      <div class="final-inner rod-box">
+        <div class="final-label">Rod Power Total</div>
+        <div id="finalRod" class="final-value">-- kW</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>© Design Hydraulics 2025</footer>
+
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
