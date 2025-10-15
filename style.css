@@ -1,10 +1,12 @@
 
 :root{--accent:#1e88e5;--muted:#64748b;--highlight:#e3f2fd}
-*{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0}body{background:#f3f7fb;color:#0b1724}
+*{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0}
+html{font-size:16px}
+body{background:#f3f7fb;color:#0b1724}
 .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.6);z-index:200}
 .modal{background:#fff;padding:20px;border-radius:12px;width:360px;box-shadow:0 10px 40px rgba(2,6,23,0.4);text-align:center;max-height:90vh;overflow:auto}
 .modal.large{width:960px;max-width:95%}
-.modal input{width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef8;margin-top:8px}
+.modal input, .modal select, input, select {font-size:16px}
 .modal .muted{color:#ef4444;margin-top:8px}
 .topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:linear-gradient(90deg,var(--accent),#1565c0);color:#fff}
 .topbar .brand{font-weight:700}
@@ -47,5 +49,5 @@ input[type=number],select,input[type=text]{padding:10px;border-radius:8px;border
 .slider:before{content:'';position:absolute;height:20px;width:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s}
 .switch input:checked + .slider{background:#4f46e5}
 .switch input:checked + .slider:before{transform:translateX(20px)}
-@media(max-width:900px){.columns{flex-direction:column}.results{grid-template-columns:1fr}.final-box{flex-direction:column}.grid-2{grid-template-columns:1fr}}
-@media(max-width:600px){.inputs-row{flex-direction:column;align-items:stretch}.field.small{min-width:100%}footer{position:fixed;bottom:0;left:0;right:0;background:#f3f7fb;color:#64748b;padding:10px 0;font-size:13px;border-top:1px solid #e0e0e0}}
+@media(max-width:900px){html{font-size:15px}.columns{flex-direction:column}.results{grid-template-columns:1fr}.final-box{flex-direction:column}.grid-2{grid-template-columns:1fr}.modal.large{width:95%}}
+@media(max-width:600px){html{font-size:14px}.inputs-row{flex-direction:column;align-items:stretch}.field.small{min-width:100%}footer{position:fixed;bottom:0;left:0;right:0;background:#f3f7fb;color:#64748b;padding:10px 0;font-size:13px;border-top:1px solid #e0e0e0}}

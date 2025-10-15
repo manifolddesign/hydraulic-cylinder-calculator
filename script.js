@@ -4,15 +4,14 @@ const DEFAULT_PWD = 'Manifold@2025';
 document.addEventListener('DOMContentLoaded', () => {
   const $ = id => document.getElementById(id);
 
-  // Password UI
-  const pwdOverlay = $('pwdOverlay');
+  // Password UI spacing fix
   const pwdInput = $('pwdInput');
-  const pwdBtn = $('pwdBtn');
-  const pwdError = $('pwdError');
-  const app = $('app');
-  // add spacing to avoid zero gap
   pwdInput.style.marginBottom = '12px';
 
+  const pwdBtn = $('pwdBtn');
+  const pwdError = $('pwdError');
+  const pwdOverlay = $('pwdOverlay');
+  const app = $('app');
   pwdBtn.addEventListener('click', () => {
     const val = (pwdInput.value || '').trim();
     if (val === DEFAULT_PWD) {
@@ -36,35 +35,34 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function fmt(v){ return (isNaN(v) ? '--' : v.toFixed(2)); }
   function mm_from_area(area_mm2){ return Math.sqrt((4*area_mm2)/Math.PI); }
-
-  const ISO_BORES = [32,40,50,63,80,100,125,140,160,180,200,220,250,280,320,350,400];
-  const ISO_RODS = [16,20,25,28,32,36,40,45,50,56,63,70,80,90,100];
-
   function nearestIso(list, value){
     if(!value || isNaN(value)) return list[0];
-    let nearest = list[0];
-    let mind = Math.abs(value - nearest);
+    let nearest = list[0]; let mind = Math.abs(value - nearest);
     list.forEach(v=>{ const d = Math.abs(value - v); if(d < mind){ mind = d; nearest = v; }});
     return nearest;
   }
 
+  const ISO_BORES = [32,40,50,63,80,100,125,140,160,180,200,220,250,280,320,350,400];
+  const ISO_RODS = [16,20,25,28,32,36,40,45,50,56,63,70,80,90,100];
+
   // computeAll (complete calculations)
   function computeAll(){
-    const n = parseInt($('nCyl').value) || 1;
-    const stroke = parseFloat($('stroke').value) || 0;
+    const $el = id => document.getElementById(id);
+    const n = parseInt($el('nCyl').value) || 1;
+    const stroke = parseFloat($el('stroke').value) || 0;
 
-    const boreDia = parseFloat($('boreDia').value) || 0;
-    const timeUnitB = $('timeUnitB').value;
-    const timeValB = parseFloat($('timeValB').value) || 0;
-    const pfModeB = $('pfModeB').value;
-    const pfValB = parseFloat($('pfValB').value) || 0;
+    const boreDia = parseFloat($el('boreDia').value) || 0;
+    const timeUnitB = $el('timeUnitB').value;
+    const timeValB = parseFloat($el('timeValB').value) || 0;
+    const pfModeB = $el('pfModeB').value;
+    const pfValB = parseFloat($el('pfValB').value) || 0;
 
-    const rodDia = parseFloat($('rodDia').value) || 0;
-    const timeUnitR = $('timeUnitR').value;
-    const timeValR = parseFloat($('timeValR').value) || 0;
-    const pfModeR = $('pfModeR').value;
-    const pfValR = parseFloat($('pfValR').value) || 0;
-    const regen = $('regen').checked;
+    const rodDia = parseFloat($el('rodDia').value) || 0;
+    const timeUnitR = $el('timeUnitR').value;
+    const timeValR = parseFloat($el('timeValR').value) || 0;
+    const pfModeR = $el('pfModeR').value;
+    const pfValR = parseFloat($el('pfValR').value) || 0;
+    const regen = $el('regen').checked;
 
     const Ab = boreDia>0 ? area_mm2(boreDia) : 0;
     const Ar_cross = rodDia>0 ? area_mm2(rodDia) : 0;
@@ -92,41 +90,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const powerB_tot = powerB_per * n;
     const powerR_tot = powerR_per * n;
 
-    $('areaB').textContent = Ab ? fmt(Ab) + ' mm²' : '--';
-    $('areaR').textContent = Ar_cross ? fmt(Ar_cross) + ' mm²' : '--';
-    $('areaAnn').textContent = Aann ? fmt(Aann) + ' mm²' : '--';
-    $('speedB').textContent = Vb>0 ? ((Vb*1000).toFixed(2)+' mm/s • '+Vb.toFixed(4)+' m/s • '+(Vb*60).toFixed(2)+' m/min') : '--';
-    $('speedR').textContent = Vr>0 ? ((Vr*1000).toFixed(2)+' mm/s • '+Vr.toFixed(4)+' m/s • '+(Vr*60).toFixed(2)+' m/min') : '--';
-    $('timeOutB').textContent = timeB>0 ? fmt(timeB) + ' s' : '--';
-    $('timeOutR').textContent = timeR>0 ? fmt(timeR) + ' s' : '--';
-    $('flowB').textContent = Qb>0 ? fmt(Qb) + ' L/min' : '--';
-    $('flowR').textContent = Qr>0 ? fmt(Qr) + ' L/min' : '--';
-    $('flowBtot').textContent = Qb_tot>0 ? fmt(Qb_tot) + ' L/min' : '--';
-    $('flowRtot').textContent = Qr_tot>0 ? fmt(Qr_tot) + ' L/min' : '--';
-    $('pressureB').textContent = pressureB>0 ? fmt(pressureB) + ' bar' : '--';
-    $('forceB').textContent = forceB>0 ? fmt(forceB) + ' kN' : '--';
-    $('pressureR').textContent = pressureR>0 ? fmt(pressureR) + ' bar' : '--';
-    $('forceR').textContent = forceR>0 ? fmt(forceR) + ' kN' : '--';
-    $('powerB').textContent = powerB_per>0 ? fmt(powerB_per) + ' kW' : '--';
-    $('powerR').textContent = powerR_per>0 ? fmt(powerR_per) + ' kW' : '--';
-    $('powerBtot').textContent = powerB_tot>0 ? fmt(powerB_tot) + ' kW' : '--';
-    $('powerRtot').textContent = powerR_tot>0 ? fmt(powerR_tot) + ' kW' : '--';
-    $('finalBore').textContent = powerB_tot>0 ? fmt(powerB_tot) + ' kW' : '-- kW';
-    $('finalRod').textContent = powerR_tot>0 ? fmt(powerR_tot) + ' kW' : '-- kW';
+    $el('areaB').textContent = Ab ? fmt(Ab) + ' mm²' : '--';
+    $el('areaR').textContent = Ar_cross ? fmt(Ar_cross) + ' mm²' : '--';
+    $el('areaAnn').textContent = Aann ? fmt(Aann) + ' mm²' : '--';
+    $el('speedB').textContent = Vb>0 ? ((Vb*1000).toFixed(2)+' mm/s • '+Vb.toFixed(4)+' m/s • '+(Vb*60).toFixed(2)+' m/min') : '--';
+    $el('speedR').textContent = Vr>0 ? ((Vr*1000).toFixed(2)+' mm/s • '+Vr.toFixed(4)+' m/s • '+(Vr*60).toFixed(2)+' m/min') : '--';
+    $el('timeOutB').textContent = timeB>0 ? fmt(timeB) + ' s' : '--';
+    $el('timeOutR').textContent = timeR>0 ? fmt(timeR) + ' s' : '--';
+    $el('flowB').textContent = Qb>0 ? fmt(Qb) + ' L/min' : '--';
+    $el('flowR').textContent = Qr>0 ? fmt(Qr) + ' L/min' : '--';
+    $el('flowBtot').textContent = Qb_tot>0 ? fmt(Qb_tot) + ' L/min' : '--';
+    $el('flowRtot').textContent = Qr_tot>0 ? fmt(Qr_tot) + ' L/min' : '--';
+    $el('pressureB').textContent = pressureB>0 ? fmt(pressureB) + ' bar' : '--';
+    $el('forceB').textContent = forceB>0 ? fmt(forceB) + ' kN' : '--';
+    $el('pressureR').textContent = pressureR>0 ? fmt(pressureR) + ' bar' : '--';
+    $el('forceR').textContent = forceR>0 ? fmt(forceR) + ' kN' : '--';
+    $el('powerB').textContent = powerB_per>0 ? fmt(powerB_per) + ' kW' : '--';
+    $el('powerR').textContent = powerR_per>0 ? fmt(powerR_per) + ' kW' : '--';
+    $el('powerBtot').textContent = powerB_tot>0 ? fmt(powerB_tot) + ' kW' : '--';
+    $el('powerRtot').textContent = powerR_tot>0 ? fmt(powerR_tot) + ' kW' : '--';
+    $el('finalBore').textContent = powerB_tot>0 ? fmt(powerB_tot) + ' kW' : '-- kW';
+    $el('finalRod').textContent = powerR_tot>0 ? fmt(powerR_tot) + ' kW' : '-- kW';
   }
 
+  // wire inputs
   document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', computeAll));
   document.getElementById('regen').addEventListener('change', computeAll);
-  document.getElementById('resetBtn').addEventListener('click', () => {
-    document.querySelectorAll('input[type=number], input[type=text], input[type=password]').forEach(i=> i.value = '');
-    document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
-    document.getElementById('regen').checked = false;
-    document.querySelectorAll('.output').forEach(o => o.textContent = '--');
-    $('nCyl').value = 1;
-    $('stroke').value = 1500;
-  });
 
-  // saved list with header checkbox
+  // saved list & export
   const savedCyls = [];
   let editingIndex = -1;
   function renderList(){
@@ -203,15 +194,21 @@ document.addEventListener('DOMContentLoaded', () => {
       .map(chk => savedCyls[parseInt(chk.dataset.index)])
       .filter(Boolean);
     if(selected.length === 0){ alert('Please select at least one cylinder to export.'); return; }
-    const ws_data = [['Name','Bore Dia (mm)','Rod Dia (mm)','Stroke (mm)','No. of Cyl']];
-    selected.forEach(c=> ws_data.push([c.name, c.bore, c.rod, c.stroke, c.nCyl]));
+    // include key calculated fields - attempt to compute for each entry where possible
+    const ws_data = [['Name','Bore Dia (mm)','Rod Dia (mm)','Stroke (mm)','No. of Cyl','Bore Area mm2','Rod Area mm2','Annular Area mm2']];
+    selected.forEach(c=> {
+      const Ab = c.bore ? Math.PI*Math.pow(parseFloat(c.bore)/2,2) : '';
+      const Ar = c.rod ? Math.PI*Math.pow(parseFloat(c.rod)/2,2) : '';
+      const Aann = (Ab && Ar) ? Math.max(Ab - Ar,0) : '';
+      ws_data.push([c.name, c.bore, c.rod, c.stroke, c.nCyl, Ab?Ab.toFixed(2):'', Ar?Ar.toFixed(2):'', Aann?Aann.toFixed(2):'']);
+    });
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     XLSX.utils.book_append_sheet(wb, ws, 'Selected Cylinders');
     XLSX.writeFile(wb, 'Selected_Cylinders.xlsx');
   });
 
-  // Find modal
+  // Find modal logic
   const findOverlay = $('findModalOverlay');
   const findBtn = $('findBtn');
   const closeFind = $('closeFind');
@@ -237,6 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rod = bore * rodRatio;
     return {bore, rod};
   }
+  function mm_from_area(area_mm2){ return Math.sqrt((4*area_mm2)/Math.PI); }
 
   function updateFindCalc(){
     const ton = parseFloat($('inputTon').value) || 0;
@@ -246,6 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const equal = $('inputEqual').checked;
     const rodType = $('rodType').value || 'standard';
     const rodRatio = rodType === 'light' ? 0.3 : rodType === 'heavy' ? 0.5 : 0.4;
+    const stroke = parseFloat($('stroke').value) || 0;
 
     let total_kN = 0;
     if(kn > 0) total_kN = kn;
@@ -280,28 +279,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const standardRod = Math.round((nearest * 0.4) / 5) * 5;
     const heavyRod = Math.round((nearest * 0.5) / 5) * 5;
     const rodChoice = (rodType==='light'?lightRod:rodType==='heavy'?heavyRod:standardRod);
-    // choose nearest available rod from ISO_RODS
     const nearestRod = nearestIso(ISO_RODS, rodChoice);
-    // populate isoRod select and set
     isoRod.value = nearestRod;
     $('calcRod').textContent = 'Light: '+lightRod+' mm • Std: '+standardRod+' mm • Heavy: '+heavyRod+' mm';
 
     findOverlay.dataset.bore = nearest;
     findOverlay.dataset.rod = nearestRod;
 
-    // update buckling calculation as user types
+    // update buckling with default unsupported length as stroke if not provided
     updateBuckling();
   }
 
   function updateBuckling(){
     const rod_d = parseFloat(findOverlay.dataset.rod) || 0;
-    const unsupported = parseFloat($('unsupportedLen').value) || 0;
+    let unsupported = parseFloat($('unsupportedLen').value) || 0;
+    if(!unsupported){ // default to stroke if empty
+      unsupported = parseFloat($('stroke').value) || 0;
+      $('unsupportedLen').value = unsupported; // show default to user
+    }
     const E_gpa = parseFloat($('youngE').value) || 210;
     const K = parseFloat($('endCondition').value) || 1;
-    const perCyl_kN = parseFloat($('calcPerCyl').textContent) || 0;
+    const perCyl_kN_text = $('calcPerCyl').textContent || '--';
+    const perCyl_kN = parseFloat(perCyl_kN_text) || 0;
     if(!rod_d || !unsupported || perCyl_kN<=0){ $('bucklingSF').textContent='--'; return; }
-    // Pcr = (pi^2 * E * I) / (K*L)^2 ; E in N/mm2 -> E_gpa*1000
-    const E = E_gpa * 1000; // convert GPa to N/mm2
+    const E = E_gpa * 1000; // GPa to N/mm2
     const I = Math.PI * Math.pow(rod_d,4) / 64; // mm4
     const L_eff = K * unsupported; // mm
     const Pcr_N = (Math.PI*Math.PI * E * I) / (L_eff*L_eff);
@@ -310,14 +311,12 @@ document.addEventListener('DOMContentLoaded', () => {
     $('bucklingSF').textContent = SF.toFixed(2) + ' (Pcr=' + (Pcr_N.toFixed(0)) + ' N)';
   }
 
-  ['inputTon','inputKN','inputQty','inputPressure','rodType','inputEqual','unsupportedLen','endCondition','youngE','isoBore','isoRod'].forEach(id=>{
+  ['inputTon','inputKN','inputQty','inputPressure','rodType','inputEqual','unsupportedLen','endCondition','youngE','isoBore','isoRod','stroke'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.addEventListener('input', ()=>{
-      // special: if user changes isoBore manually, update rod recommendations
-      if(id==='isoBore') {
+      if(id==='isoBore'){
         const b = parseFloat(el.value)||0;
         if(b>0){
-          // update calcIso display and recompute rod suggestions
           $('calcIso').textContent = b + ' mm';
           const lightRod = Math.round((b * 0.3) / 5) * 5;
           const standardRod = Math.round((b * 0.4) / 5) * 5;
@@ -329,8 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
           findOverlay.dataset.rod = nearestRod;
           updateBuckling();
         }
-      } else if(id==='isoRod') {
-        // if user chooses rod, update dataset
+      } else if(id==='isoRod'){
         const r = parseFloat(el.value)||0;
         findOverlay.dataset.rod = r;
         updateBuckling();
@@ -350,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('rodType').selectedIndex = 1;
     isoSelect.selectedIndex = 0;
     isoRod.selectedIndex = 0;
-    ['calcPerCyl','calcBore','calcRod','calcIso','bucklingSF'].forEach(id=>document.getElementById(id).textContent='--');
+    ['calcPerCyl','calcBore','calcRod','calcIso','bucklingSF'].forEach(id=>{ const el=document.getElementById(id); if(el) el) el.textContent='--'; });
     delete findOverlay.dataset.bore; delete findOverlay.dataset.rod;
   });
 

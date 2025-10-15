@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
   <title>Hydraulic Cylinder Calculator</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -173,7 +173,7 @@
 
       <h3>Buckling (Euler) Check</h3>
       <div class="grid-2">
-        <div class="field"><label>Unsupported length of rod (mm)</label><input id="unsupportedLen" type="number" step="1" placeholder="e.g. 1000"></div>
+        <div class="field"><label>Unsupported length of rod (mm) — (default: stroke)</label><input id="unsupportedLen" type="number" step="1" placeholder="e.g. 1000"></div>
         <div class="field"><label>End condition</label>
           <select id="endCondition">
             <option value="1">Pinned-Pinned (K=1.0)</option>
