@@ -118,10 +118,7 @@
     <table id="savedList" class="savedTable">
       <thead>
         <tr>
-          <th>
-            Select
-            <button id="toggleSelectAll" class="smallBtn">Select All</button>
-          </th>
+          <th><input type="checkbox" id="selectAllHeader" title="Select/unselect all"></th>
           <th>Name</th>
           <th>Specification</th>
           <th>Actions</th>
@@ -143,7 +140,13 @@
       </div>
       <div class="grid-2">
         <div class="field"><label>No. of Cylinders</label><input id="inputQty" type="number" value="1" min="1"></div>
+        <div class="field"><label>All cylinders hold equal weight</label><label class="switch"><input id="inputEqual" type="checkbox" checked><span class="slider"></span></label></div>
+      </div>
+      <div class="grid-2">
         <div class="field"><label>Pressure (bar, optional)</label><input id="inputPressure" type="number" step="0.1"></div>
+        <div class="field"><label>ISO Bore Size</label>
+          <select id="isoBore"></select>
+        </div>
       </div>
       <div class="field"><label>Rod Type</label>
         <select id="rodType">
@@ -152,10 +155,12 @@
           <option value="heavy">Heavy — 50% of bore</option>
         </select>
       </div>
+
       <div class="results modal-results">
         <div class="res"><div class="label">Per-cylinder load</div><div id="calcPerCyl" class="value output">-- kN</div></div>
-        <div class="res"><div class="label">Bore diameter</div><div id="calcBore" class="value output">-- mm</div></div>
-        <div class="res"><div class="label">Rod diameter</div><div id="calcRod" class="value output">-- mm</div></div>
+        <div class="res"><div class="label">Calculated bore</div><div id="calcBore" class="value output">-- mm</div></div>
+        <div class="res"><div class="label">Calculated rod</div><div id="calcRod" class="value output">-- mm</div></div>
+        <div class="res"><div class="label">Nearest ISO bore</div><div id="calcIso" class="value output">--</div></div>
       </div>
       <div style="text-align:right;margin-top:12px">
         <button id="applyFind" class="btn">Apply</button>

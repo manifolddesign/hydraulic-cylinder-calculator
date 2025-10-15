@@ -1,4 +1,4 @@
-// Fully functional script.js
+
 const DEFAULT_PWD = 'Manifold@2025';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // helpers
   function area_mm2(d){ return Math.PI * Math.pow(d/2,2); }
   function unitTo_mps(val, unit, stroke_mm){
     if(!val || val===0) return 0;
@@ -35,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function fmt(v){ return (isNaN(v) ? '--' : v.toFixed(2)); }
   function mm_from_area(area_mm2){ return Math.sqrt((4*area_mm2)/Math.PI); }
+
+  // ISO bore sizes list
+  const ISO_BORES = [32,40,50,63,80,100,125,140,160,180,200,220,250,280,320,350,400];
 
   // computeAll (complete calculations)
   function computeAll(){
@@ -65,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const timeR = Vr>0 ? (stroke/1000)/Vr : 0;
 
     // flows L/min
-    const Qb = (Ab/1e6) * (Vb*60) * 1000; // mm2 -> m2 ; m/s to m/min -> *60 ; m3 to L -> *1000
+    const Qb = (Ab/1e6) * (Vb*60) * 1000;
     const Qr = (Aann/1e6) * (Vr*60) * 1000;
     const Qb_tot = Qb * n;
     const Qr_tot = Qr * n;
@@ -120,7 +122,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('stroke').value = 1500;
   });
 
-  // saved cylinders management
+  // saved cylinders management with checkbox header
   const savedCyls = [];
   let editingIndex = -1;
 
@@ -141,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
       tbody.appendChild(tr);
     });
 
-    // attach handlers
+    // handlers
     document.querySelectorAll('.deleteBtn').forEach(btn=> btn.addEventListener('click', (e)=>{
       const i = parseInt(e.currentTarget.dataset.index);
       if(!isNaN(i)) { savedCyls.splice(i,1); renderList(); }
@@ -181,11 +183,26 @@ document.addEventListener('DOMContentLoaded', () => {
     renderList();
   });
 
-  // export to excel
+  // header select all checkbox behavior
+  const selectAllHeader = $('selectAllHeader');
+  selectAllHeader.addEventListener('change', (e) => {
+    const checks = document.querySelectorAll('.cylSelect');
+    checks.forEach((c, i) => c.checked = selectAllHeader.checked);
+  });
+  document.addEventListener('change', (e) => {
+    if(e.target && e.target.classList && e.target.classList.contains('cylSelect')){
+      const checks = document.querySelectorAll('.cylSelect');
+      const allChecked = checks.length>0 && Array.from(checks).every(c => c.checked);
+      selectAllHeader.checked = allChecked;
+    }
+  });
+
+  // export using header checkbox selection
   $('exportBtn').addEventListener('click', ()=>{
     const selected = Array.from(document.querySelectorAll('.cylSelect'))
       .filter(chk => chk.checked)
-      .map(chk => savedCyls[parseInt(chk.dataset.index)]);
+      .map(chk => savedCyls[parseInt(chk.dataset.index)])
+      .filter(Boolean);
     if(selected.length === 0){ alert('Please select at least one cylinder to export.'); return; }
     const ws_data = [['Name','Bore Dia (mm)','Rod Dia (mm)','Stroke (mm)','No. of Cyl']];
     selected.forEach(c=> ws_data.push([c.name, c.bore, c.rod, c.stroke, c.nCyl]));
@@ -195,37 +212,39 @@ document.addEventListener('DOMContentLoaded', () => {
     XLSX.writeFile(wb, 'Selected_Cylinders.xlsx');
   });
 
-  // select all toggle
-  const toggleBtn = $('toggleSelectAll');
-  toggleBtn.addEventListener('click', ()=>{
-    const checks = document.querySelectorAll('.cylSelect');
-    const allChecked = Array.from(checks).every(c => c.checked);
-    checks.forEach(c => c.checked = !allChecked);
-    toggleBtn.textContent = allChecked ? 'Select All' : 'Unselect All';
-  });
-  document.addEventListener('change', (e)=>{
-    if(e.target && e.target.classList && e.target.classList.contains('cylSelect')){
-      const checks = document.querySelectorAll('.cylSelect');
-      const allChecked = checks.length>0 && Array.from(checks).every(c => c.checked);
-      toggleBtn.textContent = allChecked ? 'Unselect All' : 'Select All';
-    }
-  });
-
-  // ---------- Find Cylinder Size Modal ----------
+  // ---------- Find Cylinder Size Modal with ISO selection and equal distribution ----------
   const findOverlay = $('findModalOverlay');
   const findBtn = $('findBtn');
   const closeFind = $('closeFind');
   const applyFind = $('applyFind');
+  const isoSelect = $('isoBore');
+
+  // populate ISO bore list
+  ISO_BORES.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b;
+    opt.textContent = b + ' mm';
+    isoSelect.appendChild(opt);
+  });
+
+  function nearestIso(value){
+    if(!value || isNaN(value)) return ISO_BORES[0];
+    let nearest = ISO_BORES[0];
+    let mindiff = Math.abs(value - nearest);
+    ISO_BORES.forEach(v => {
+      const d = Math.abs(value - v);
+      if(d < mindiff){ mindiff = d; nearest = v; }
+    });
+    return nearest;
+  }
 
   function computeFromCapacity(perCyl_kN, pressure_bar, rodRatio){
-    // area_mm2 = (perCyl_kN * 10000) / pressure_bar  (1 bar = 0.1 N/mm2)
     const area_mm2 = (perCyl_kN * 10000) / pressure_bar;
     const bore = mm_from_area(area_mm2);
     const rod = bore * rodRatio;
     return {bore, rod};
   }
   function computeFromWeightNoPressure(perCyl_kN, rodRatio){
-    // Use material allowable stress approach: assume allowable stress = 20 N/mm2 (conservative)
     const stress = 20; // N/mm2
     const area_mm2 = (perCyl_kN * 1000) / stress;
     const bore = mm_from_area(area_mm2);
@@ -238,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const kn = parseFloat($('inputKN').value) || 0;
     const qty = parseInt($('inputQty').value) || 1;
     const pressure = parseFloat($('inputPressure').value);
+    const equal = $('inputEqual').checked;
     const rodType = $('rodType').value || 'standard';
     const rodRatio = rodType === 'light' ? 0.3 : rodType === 'heavy' ? 0.5 : 0.4;
 
@@ -246,29 +266,48 @@ document.addEventListener('DOMContentLoaded', () => {
     else if(ton > 0) total_kN = ton * 9.81;
     else total_kN = 0;
 
-    if(total_kN <= 0){ $('calcPerCyl').textContent='--'; $('calcBore').textContent='--'; $('calcRod').textContent='--'; delete findOverlay.dataset.bore; delete findOverlay.dataset.rod; return; }
+    if(total_kN <= 0){ $('calcPerCyl').textContent='--'; $('calcBore').textContent='--'; $('calcRod').textContent='--'; $('calcIso').textContent='--'; delete findOverlay.dataset.bore; delete findOverlay.dataset.rod; return; }
 
-    const perCyl = total_kN / Math.max(qty,1);
+    // decide per-cylinder
+    let perCyl;
+    if(equal){
+      perCyl = total_kN / Math.max(qty,1);
+    } else {
+      // if not equal, assume single cylinder holds whole load (user can change qty to 1)
+      perCyl = total_kN;
+    }
     $('calcPerCyl').textContent = fmt(perCyl) + ' kN';
 
+    let result;
     if(pressure && pressure > 0){
-      // compute using pressure
-      const r = computeFromCapacity(perCyl, pressure, rodRatio);
-      $('calcBore').textContent = fmt(r.bore) + ' mm';
-      $('calcRod').textContent = fmt(r.rod) + ' mm';
-      findOverlay.dataset.bore = r.bore;
-      findOverlay.dataset.rod = r.rod;
+      result = computeFromCapacity(perCyl, pressure, rodRatio);
     } else {
-      // compute purely from weight (no default pressure used)
-      const r = computeFromWeightNoPressure(perCyl, rodRatio);
-      $('calcBore').textContent = fmt(r.bore) + ' mm';
-      $('calcRod').textContent = fmt(r.rod) + ' mm';
-      findOverlay.dataset.bore = r.bore;
-      findOverlay.dataset.rod = r.rod;
+      result = computeFromWeightNoPressure(perCyl, rodRatio);
     }
+    $('calcBore').textContent = fmt(result.bore) + ' mm';
+    $('calcRod').textContent = fmt(result.rod) + ' mm';
+
+    // select nearest ISO bore by default and set iso select
+    const nearest = nearestIso(result.bore);
+    isoSelect.value = nearest;
+    $('calcIso').textContent = nearest + ' mm';
+
+    // compute recommended rod options (nearest standard sizes) - simple rounding to nearest 5 mm
+    const lightRod = Math.round((nearest * 0.3) / 5) * 5;
+    const standardRod = Math.round((nearest * 0.4) / 5) * 5;
+    const heavyRod = Math.round((nearest * 0.5) / 5) * 5;
+    // show choices by replacing calcRod with list (create small chooser)
+    const rodHtml = `Light: ${lightRod} mm • Standard: ${standardRod} mm • Heavy: ${heavyRod} mm`;
+    $('calcRod').textContent = rodHtml;
+    // store default selected rod based on selected rodType
+    let selectedRod = standardRod;
+    if(rodType === 'light') selectedRod = lightRod;
+    if(rodType === 'heavy') selectedRod = heavyRod;
+    findOverlay.dataset.bore = nearest;
+    findOverlay.dataset.rod = selectedRod;
   }
 
-  ['inputTon','inputKN','inputQty','inputPressure','rodType'].forEach(id => {
+  ['inputTon','inputKN','inputQty','inputPressure','rodType','inputEqual'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.addEventListener('input', updateFindCalc);
   });
@@ -276,10 +315,11 @@ document.addEventListener('DOMContentLoaded', () => {
   findBtn.addEventListener('click', () => { findOverlay.style.display = 'flex'; updateFindCalc(); });
   closeFind.addEventListener('click', () => { findOverlay.style.display = 'none'; });
   findOverlay.addEventListener('click', (e) => { if(e.target === findOverlay) findOverlay.style.display = 'none'; });
+
   applyFind.addEventListener('click', () => {
     const b = parseFloat(findOverlay.dataset.bore || 0);
     const r = parseFloat(findOverlay.dataset.rod || 0);
-    if(!b || !r){ alert('Please enter valid load or capacity (and pressure if you want pressure-based calc).'); return; }
+    if(!b || !r){ alert('Please enter valid load/capacity.'); return; }
     $('boreDia').value = b.toFixed(2);
     $('rodDia').value = r.toFixed(2);
     computeAll();
