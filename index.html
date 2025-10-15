@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Hydraulic Cylinder Calculator</title>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -29,16 +29,31 @@
   <div class="container" id="app" style="display:none">
     <h1>Hydraulic Cylinder Calculator</h1>
 
+    <div class="row inputs-row">
+      <div class="field small"><label>Name of the Cylinder</label><input id="cylName" type="text" placeholder="Enter cylinder name"></div>
+      <div class="field small"><label>No. of cylinders</label><input id="nCyl" type="number" min="1" value="1"></div>
+      <div class="field small"><label>Stroke (mm)</label><input id="stroke" type="number" value="1500"></div>
+      <div class="field small switchRow"><label>Regeneration</label><label class="switch"><input id="regen" type="checkbox"><span class="slider"></span></label></div>
+      <button id="addBtn" class="btn">Add Cylinder</button>
+    </div>
+
     <div class="columns">
       <section class="card">
         <h2>Bore Side</h2>
-        <div class="field"><label>Bore diameter (mm)</label><input id="boreDia" type="number" value="320"></div>
-        <div class="field"><label>Stroke (mm)</label><input id="stroke" type="number" value="1500"></div>
+        <div class="field"><label>Bore diameter (mm)</label><input id="boreDia" type="number" value="320" step="0.01"></div>
+        <div class="results">
+          <div class="res"><div class="label">Bore area</div><div id="areaB" class="value output">--</div></div>
+          <div class="res highlight"><div class="label">Total bore flow</div><div id="flowBtot" class="value output">--</div></div>
+        </div>
       </section>
+
       <section class="card">
         <h2>Rod Side</h2>
-        <div class="field"><label>Rod diameter (mm)</label><input id="rodDia" type="number" value="220"></div>
-        <div class="field"><label>No. of Cylinders</label><input id="nCyl" type="number" value="1"></div>
+        <div class="field"><label>Rod diameter (mm)</label><input id="rodDia" type="number" value="220" step="0.01"></div>
+        <div class="results">
+          <div class="res"><div class="label">Rod area</div><div id="areaR" class="value output">--</div></div>
+          <div class="res highlight"><div class="label">Total rod flow</div><div id="flowRtot" class="value output">--</div></div>
+        </div>
       </section>
     </div>
 
@@ -52,9 +67,17 @@
         <div id="finalRod" class="final-value">-- kW</div>
       </div>
     </div>
-  </div>
 
-  <footer>© Design Hydraulics 2025</footer>
+    <h3 class="savedTitle">Saved Cylinders</h3>
+    <table id="savedList" class="savedTable">
+      <thead>
+        <tr><th>Select</th><th>Name</th><th>Specification</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <footer>© Design Hydraulics@2025 | All Rights Reserved</footer>
+  </div>
 
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="script.js"></script>
