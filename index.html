@@ -138,16 +138,19 @@
         <div class="field"><label>Load (tonnes)</label><input id="inputTon" type="number" step="0.001"></div>
         <div class="field"><label>Capacity (kN)</label><input id="inputKN" type="number" step="0.001"></div>
       </div>
+
       <div class="grid-2">
         <div class="field"><label>No. of Cylinders</label><input id="inputQty" type="number" value="1" min="1"></div>
-        <div class="field"><label>All cylinders hold equal weight</label><label class="switch"><input id="inputEqual" type="checkbox" checked><span class="slider"></span></label></div>
+        <div class="field"><label>All Cylinders Hold Entered Weight</label><label class="switch"><input id="inputEqual" type="checkbox" checked><span class="slider"></span></label></div>
       </div>
+
       <div class="grid-2">
         <div class="field"><label>Pressure (bar, optional)</label><input id="inputPressure" type="number" step="0.1"></div>
         <div class="field"><label>ISO Bore Size</label>
           <select id="isoBore"></select>
         </div>
       </div>
+
       <div class="field"><label>Rod Type</label>
         <select id="rodType">
           <option value="light">Light — 30% of bore</option>
@@ -156,12 +159,35 @@
         </select>
       </div>
 
+      <div class="grid-2">
+        <div class="field"><label>Rod ISO Recommendation</label><select id="isoRod"></select></div>
+        <div class="field"><label>Clear</label><button id="clearFind" class="btn outline">Clear</button></div>
+      </div>
+
       <div class="results modal-results">
         <div class="res"><div class="label">Per-cylinder load</div><div id="calcPerCyl" class="value output">-- kN</div></div>
         <div class="res"><div class="label">Calculated bore</div><div id="calcBore" class="value output">-- mm</div></div>
         <div class="res"><div class="label">Calculated rod</div><div id="calcRod" class="value output">-- mm</div></div>
         <div class="res"><div class="label">Nearest ISO bore</div><div id="calcIso" class="value output">--</div></div>
       </div>
+
+      <h3>Buckling (Euler) Check</h3>
+      <div class="grid-2">
+        <div class="field"><label>Unsupported length of rod (mm)</label><input id="unsupportedLen" type="number" step="1" placeholder="e.g. 1000"></div>
+        <div class="field"><label>End condition</label>
+          <select id="endCondition">
+            <option value="1">Pinned-Pinned (K=1.0)</option>
+            <option value="0.7">Fixed-Pinned (K=0.7)</option>
+            <option value="0.5">Fixed-Fixed (K=0.5)</option>
+            <option value="2">Fixed-Free (cantilever) (K=2.0)</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Young's Modulus E (GPa)</label><input id="youngE" type="number" step="1" value="210"></div>
+        <div class="field"><label>Calculated Buckling Safety Factor</label><div id="bucklingSF" class="value output">--</div></div>
+      </div>
+
       <div style="text-align:right;margin-top:12px">
         <button id="applyFind" class="btn">Apply</button>
         <button id="closeFind" class="btn outline">Close</button>
