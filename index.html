@@ -2,17 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Hydraulic Cylinder Calculator</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Password Modal -->
   <div id="pwdOverlay" class="overlay">
     <div class="modal">
       <h2>Enter Password</h2>
       <input id="pwdInput" type="password" placeholder="Password" />
       <div class="modal-actions">
-        <button id="pwdBtn">Unlock</button>
+        <button id="pwdBtn" class="btn">Unlock</button>
       </div>
       <p id="pwdError" class="muted"></p>
     </div>
@@ -29,6 +30,7 @@
 
   <div class="container" id="app" style="display:none">
     <h1>Hydraulic Cylinder Calculator</h1>
+
     <div class="row inputs-row">
       <div class="field small"><label>Name of the Cylinder</label><input id="cylName" type="text" placeholder="Enter cylinder name"></div>
       <div class="field small"><label>No. of cylinders</label><input id="nCyl" type="number" min="1" value="1"></div>
@@ -55,20 +57,57 @@
         </div>
         <div class="results">
           <div class="res"><div class="label">Bore area</div><div id="areaB" class="value output">--</div></div>
+          <div class="res"><div class="label">Bore speed</div><div id="speedB" class="value output">--</div></div>
+          <div class="res"><div class="label">Bore time</div><div id="timeOutB" class="value output">--</div></div>
           <div class="res highlight"><div class="label">Bore flow (per cyl)</div><div id="flowB" class="value output">--</div></div>
+          <div class="res highlight"><div class="label">Total bore flow</div><div id="flowBtot" class="value output">--</div></div>
           <div class="res"><div class="label">Bore pressure</div><div id="pressureB" class="value output">--</div></div>
           <div class="res"><div class="label">Bore force</div><div id="forceB" class="value output">--</div></div>
+          <div class="res"><div class="label">Bore power (per cyl)</div><div id="powerB" class="value output">--</div></div>
+          <div class="res final bore-final"><div class="label">Bore power (total)</div><div id="powerBtot" class="value output">-- kW</div></div>
         </div>
       </section>
 
       <section class="card">
         <h2>Rod Side</h2>
         <div class="field"><label>Rod diameter (mm)</label><input id="rodDia" type="number" value="220" step="0.01"></div>
+        <div class="field inline"><label>Time unit</label>
+          <select id="timeUnitR">
+            <option value="sec">sec (time to complete stroke)</option>
+            <option value="mmsec">mm/sec</option>
+            <option value="msec">m/sec</option>
+            <option value="mmin">m/min</option>
+          </select>
+          <input id="timeValR" type="number" step="0.01" placeholder="value">
+        </div>
+        <div class="field inline"><label>Input</label>
+          <select id="pfModeR"><option value="pressure">Pressure (bar)</option><option value="force">Force (kN)</option></select>
+          <input id="pfValR" type="number" step="0.001" placeholder="enter value">
+        </div>
         <div class="results">
           <div class="res"><div class="label">Rod cross area</div><div id="areaR" class="value output">--</div></div>
           <div class="res"><div class="label">Annular area (bore - rod)</div><div id="areaAnn" class="value output">--</div></div>
+          <div class="res"><div class="label">Rod speed</div><div id="speedR" class="value output">--</div></div>
+          <div class="res"><div class="label">Rod time</div><div id="timeOutR" class="value output">--</div></div>
+          <div class="res highlight"><div class="label">Rod flow (per cyl)</div><div id="flowR" class="value output">--</div></div>
+          <div class="res highlight"><div class="label">Total rod flow</div><div id="flowRtot" class="value output">--</div></div>
+          <div class="res"><div class="label">Rod pressure</div><div id="pressureR" class="value output">--</div></div>
+          <div class="res"><div class="label">Rod force</div><div id="forceR" class="value output">--</div></div>
+          <div class="res"><div class="label">Rod power (per cyl)</div><div id="powerR" class="value output">--</div></div>
+          <div class="res final rod-final"><div class="label">Rod power (total)</div><div id="powerRtot" class="value output">-- kW</div></div>
         </div>
       </section>
+    </div>
+
+    <div class="final-box">
+      <div class="final-inner bore-box">
+        <div class="final-label">Bore Power Total</div>
+        <div id="finalBore" class="final-value">-- kW</div>
+      </div>
+      <div class="final-inner rod-box">
+        <div class="final-label">Rod Power Total</div>
+        <div id="finalRod" class="final-value">-- kW</div>
+      </div>
     </div>
 
     <div style="text-align:center;margin-top:16px;">
@@ -79,7 +118,10 @@
     <table id="savedList" class="savedTable">
       <thead>
         <tr>
-          <th>Select <button id="toggleSelectAll" class="smallBtn">Select All</button></th>
+          <th>
+            Select
+            <button id="toggleSelectAll" class="smallBtn">Select All</button>
+          </th>
           <th>Name</th>
           <th>Specification</th>
           <th>Actions</th>
@@ -100,14 +142,14 @@
         <div class="field"><label>Capacity (kN)</label><input id="inputKN" type="number" step="0.001"></div>
       </div>
       <div class="grid-2">
-        <div class="field"><label>No. of Cylinders</label><input id="inputQty" type="number" value="1"></div>
+        <div class="field"><label>No. of Cylinders</label><input id="inputQty" type="number" value="1" min="1"></div>
         <div class="field"><label>Pressure (bar, optional)</label><input id="inputPressure" type="number" step="0.1"></div>
       </div>
       <div class="field"><label>Rod Type</label>
         <select id="rodType">
-          <option value="light">Light</option>
-          <option value="standard" selected>Standard</option>
-          <option value="heavy">Heavy</option>
+          <option value="light">Light — 30% of bore</option>
+          <option value="standard" selected>Standard — 40% of bore</option>
+          <option value="heavy">Heavy — 50% of bore</option>
         </select>
       </div>
       <div class="results modal-results">

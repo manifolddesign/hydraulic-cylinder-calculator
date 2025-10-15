@@ -1,10 +1,10 @@
-// Final script with working password unlock and find modal behavior
+// Fully functional script.js
 const DEFAULT_PWD = 'Manifold@2025';
 
 document.addEventListener('DOMContentLoaded', () => {
   const $ = id => document.getElementById(id);
 
-  // Password modal elements
+  // Password modal
   const pwdOverlay = $('pwdOverlay');
   const pwdInput = $('pwdInput');
   const pwdBtn = $('pwdBtn');
@@ -23,41 +23,116 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Basic helpers
+  // helpers
   function area_mm2(d){ return Math.PI * Math.pow(d/2,2); }
+  function unitTo_mps(val, unit, stroke_mm){
+    if(!val || val===0) return 0;
+    if(unit === 'sec') return (stroke_mm/1000)/val;
+    if(unit === 'mmsec') return val/1000;
+    if(unit === 'msec') return val;
+    if(unit === 'mmin') return val/60;
+    return 0;
+  }
   function fmt(v){ return (isNaN(v) ? '--' : v.toFixed(2)); }
   function mm_from_area(area_mm2){ return Math.sqrt((4*area_mm2)/Math.PI); }
 
-  // computeAll - updates some outputs based on bore/rod/inputs
+  // computeAll (complete calculations)
   function computeAll(){
-    const bore = parseFloat($('boreDia').value) || 0;
-    const rod = parseFloat($('rodDia').value) || 0;
-    const Ab = bore > 0 ? area_mm2(bore) : 0;
-    const Ar = rod > 0 ? area_mm2(rod) : 0;
-    const Aann = Math.max(Ab - Ar, 0);
+    const n = parseInt($('nCyl').value) || 1;
+    const stroke = parseFloat($('stroke').value) || 0;
 
+    const boreDia = parseFloat($('boreDia').value) || 0;
+    const timeUnitB = $('timeUnitB').value;
+    const timeValB = parseFloat($('timeValB').value) || 0;
+    const pfModeB = $('pfModeB').value;
+    const pfValB = parseFloat($('pfValB').value) || 0;
+
+    const rodDia = parseFloat($('rodDia').value) || 0;
+    const timeUnitR = $('timeUnitR').value;
+    const timeValR = parseFloat($('timeValR').value) || 0;
+    const pfModeR = $('pfModeR').value;
+    const pfValR = parseFloat($('pfValR').value) || 0;
+    const regen = $('regen').checked;
+
+    const Ab = boreDia>0 ? area_mm2(boreDia) : 0;
+    const Ar_cross = rodDia>0 ? area_mm2(rodDia) : 0;
+    const Aann = Math.max(Ab - Ar_cross, 0);
+
+    // speeds and times
+    const Vb = unitTo_mps(timeValB, timeUnitB, stroke);
+    const Vr = unitTo_mps(timeValR, timeUnitR, stroke);
+    const timeB = Vb>0 ? (stroke/1000)/Vb : 0;
+    const timeR = Vr>0 ? (stroke/1000)/Vr : 0;
+
+    // flows L/min
+    const Qb = (Ab/1e6) * (Vb*60) * 1000; // mm2 -> m2 ; m/s to m/min -> *60 ; m3 to L -> *1000
+    const Qr = (Aann/1e6) * (Vr*60) * 1000;
+    const Qb_tot = Qb * n;
+    const Qr_tot = Qr * n;
+
+    // pressures and forces
+    let pressureB = 0, forceB = 0, pressureR = 0, forceR = 0;
+    if(pfModeB === 'pressure'){ pressureB = pfValB; forceB = (Ab * pressureB * 0.1) / 1000; }
+    else { forceB = pfValB; pressureB = (forceB * 1000) / (Ab * 0.1); }
+    if(pfModeR === 'pressure'){ pressureR = pfValR; forceR = (Aann * pressureR * 0.1) / 1000; }
+    else { forceR = pfValR; pressureR = (forceR * 1000) / (Aann * 0.1); }
+
+    // power
+    const Qb_for_power = regen ? Math.max(Qb - Qr, 0) : Qb;
+    const powerB_per = (pressureB>0 && Qb_for_power>0) ? (pressureB * Qb_for_power) / 600 : 0;
+    const powerR_per = (pressureR>0 && Qr>0) ? (pressureR * Qr) / 600 : 0;
+    const powerB_tot = powerB_per * n;
+    const powerR_tot = powerR_per * n;
+
+    // write outputs
     $('areaB').textContent = Ab ? fmt(Ab) + ' mm²' : '--';
-    $('areaR').textContent = Ar ? fmt(Ar) + ' mm²' : '--';
+    $('areaR').textContent = Ar_cross ? fmt(Ar_cross) + ' mm²' : '--';
     $('areaAnn').textContent = Aann ? fmt(Aann) + ' mm²' : '--';
+    $('speedB').textContent = Vb>0 ? ((Vb*1000).toFixed(2)+' mm/s • '+Vb.toFixed(4)+' m/s • '+(Vb*60).toFixed(2)+' m/min') : '--';
+    $('speedR').textContent = Vr>0 ? ((Vr*1000).toFixed(2)+' mm/s • '+Vr.toFixed(4)+' m/s • '+(Vr*60).toFixed(2)+' m/min') : '--';
+    $('timeOutB').textContent = timeB>0 ? fmt(timeB) + ' s' : '--';
+    $('timeOutR').textContent = timeR>0 ? fmt(timeR) + ' s' : '--';
+    $('flowB').textContent = Qb>0 ? fmt(Qb) + ' L/min' : '--';
+    $('flowR').textContent = Qr>0 ? fmt(Qr) + ' L/min' : '--';
+    $('flowBtot').textContent = Qb_tot>0 ? fmt(Qb_tot) + ' L/min' : '--';
+    $('flowRtot').textContent = Qr_tot>0 ? fmt(Qr_tot) + ' L/min' : '--';
+    $('pressureB').textContent = pressureB>0 ? fmt(pressureB) + ' bar' : '--';
+    $('forceB').textContent = forceB>0 ? fmt(forceB) + ' kN' : '--';
+    $('pressureR').textContent = pressureR>0 ? fmt(pressureR) + ' bar' : '--';
+    $('forceR').textContent = forceR>0 ? fmt(forceR) + ' kN' : '--';
+    $('powerB').textContent = powerB_per>0 ? fmt(powerB_per) + ' kW' : '--';
+    $('powerR').textContent = powerR_per>0 ? fmt(powerR_per) + ' kW' : '--';
+    $('powerBtot').textContent = powerB_tot>0 ? fmt(powerB_tot) + ' kW' : '--';
+    $('powerRtot').textContent = powerR_tot>0 ? fmt(powerR_tot) + ' kW' : '--';
+    $('finalBore').textContent = powerB_tot>0 ? fmt(powerB_tot) + ' kW' : '-- kW';
+    $('finalRod').textContent = powerR_tot>0 ? fmt(powerR_tot) + ' kW' : '-- kW';
   }
 
   // wire inputs to computeAll
-  ['boreDia','rodDia'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.addEventListener('input', computeAll);
+  document.querySelectorAll('input, select').forEach(i => i.addEventListener('input', computeAll));
+  document.getElementById('regen').addEventListener('change', computeAll);
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    document.querySelectorAll('input[type=number], input[type=text], input[type=password]').forEach(i=> i.value = '');
+    document.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+    document.getElementById('regen').checked = false;
+    document.querySelectorAll('.output').forEach(o => o.textContent = '--');
+    $('nCyl').value = 1;
+    $('stroke').value = 1500;
   });
 
-  // saved cylinders (simple management)
+  // saved cylinders management
   const savedCyls = [];
+  let editingIndex = -1;
+
   function renderList(){
     const tbody = document.querySelector('#savedList tbody');
     tbody.innerHTML = '';
-    savedCyls.forEach((c, idx) => {
+    savedCyls.forEach((cyl, idx)=>{
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><input type="checkbox" class="cylSelect" data-index="${idx}" checked></td>
-        <td>${c.name}</td>
-        <td>${c.bore} × ${c.rod} × ${c.stroke}</td>
+        <td>${cyl.name}</td>
+        <td>${cyl.bore} × ${cyl.rod} × ${cyl.stroke} mm</td>
         <td>
           <button class="btn editBtn" data-index="${idx}">Edit</button>
           <button class="btn deleteBtn" data-index="${idx}">Delete</button>
@@ -67,82 +142,92 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // attach handlers
-    document.querySelectorAll('.deleteBtn').forEach(btn => btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.deleteBtn').forEach(btn=> btn.addEventListener('click', (e)=>{
       const i = parseInt(e.currentTarget.dataset.index);
-      if (!isNaN(i)) { savedCyls.splice(i,1); renderList(); }
+      if(!isNaN(i)) { savedCyls.splice(i,1); renderList(); }
     }));
-    document.querySelectorAll('.editBtn').forEach(btn => btn.addEventListener('click', (e) => {
+    document.querySelectorAll('.editBtn').forEach(btn=> btn.addEventListener('click', (e)=>{
       const i = parseInt(e.currentTarget.dataset.index);
-      if (isNaN(i)) return;
+      if(isNaN(i)) return;
       const cyl = savedCyls[i];
       $('cylName').value = cyl.name;
       $('boreDia').value = cyl.bore;
       $('rodDia').value = cyl.rod;
       $('stroke').value = cyl.stroke;
       $('nCyl').value = cyl.nCyl || 1;
+      editingIndex = i;
+      $('addBtn').textContent = 'Update Cylinder';
       computeAll();
       window.scrollTo({top:0, behavior:'smooth'});
     }));
   }
 
-  $('addBtn').addEventListener('click', () => {
+  $('addBtn').addEventListener('click', ()=>{
+    computeAll();
     const name = ($('cylName').value || 'Untitled').trim();
     const bore = $('boreDia').value;
     const rod = $('rodDia').value;
     const stroke = $('stroke').value;
     const nCyl = $('nCyl').value || 1;
     if(!bore || !rod || !stroke){ alert('Please enter bore, rod and stroke before adding.'); return; }
-    savedCyls.push({name, bore, rod, stroke, nCyl});
+    const entry = {name, bore, rod, stroke, nCyl};
+    if(editingIndex >= 0){
+      savedCyls[editingIndex] = entry;
+      editingIndex = -1;
+      $('addBtn').textContent = 'Add Cylinder';
+    } else {
+      savedCyls.push(entry);
+    }
     renderList();
   });
 
-  // Export to Excel (SheetJS)
-  $('exportBtn').addEventListener('click', () => {
+  // export to excel
+  $('exportBtn').addEventListener('click', ()=>{
     const selected = Array.from(document.querySelectorAll('.cylSelect'))
-      .filter(c => c.checked)
-      .map(c => {
-        const idx = parseInt(c.dataset.index);
-        return savedCyls[idx];
-      }).filter(Boolean);
+      .filter(chk => chk.checked)
+      .map(chk => savedCyls[parseInt(chk.dataset.index)]);
     if(selected.length === 0){ alert('Please select at least one cylinder to export.'); return; }
     const ws_data = [['Name','Bore Dia (mm)','Rod Dia (mm)','Stroke (mm)','No. of Cyl']];
-    selected.forEach(s => ws_data.push([s.name, s.bore, s.rod, s.stroke, s.nCyl]));
+    selected.forEach(c=> ws_data.push([c.name, c.bore, c.rod, c.stroke, c.nCyl]));
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     XLSX.utils.book_append_sheet(wb, ws, 'Selected Cylinders');
     XLSX.writeFile(wb, 'Selected_Cylinders.xlsx');
   });
 
-  // Select all toggle
+  // select all toggle
   const toggleBtn = $('toggleSelectAll');
-  toggleBtn.addEventListener('click', () => {
+  toggleBtn.addEventListener('click', ()=>{
     const checks = document.querySelectorAll('.cylSelect');
     const allChecked = Array.from(checks).every(c => c.checked);
     checks.forEach(c => c.checked = !allChecked);
     toggleBtn.textContent = allChecked ? 'Select All' : 'Unselect All';
   });
+  document.addEventListener('change', (e)=>{
+    if(e.target && e.target.classList && e.target.classList.contains('cylSelect')){
+      const checks = document.querySelectorAll('.cylSelect');
+      const allChecked = checks.length>0 && Array.from(checks).every(c => c.checked);
+      toggleBtn.textContent = allChecked ? 'Unselect All' : 'Select All';
+    }
+  });
 
-  // Find modal logic (as per user's requirement)
+  // ---------- Find Cylinder Size Modal ----------
   const findOverlay = $('findModalOverlay');
   const findBtn = $('findBtn');
   const closeFind = $('closeFind');
   const applyFind = $('applyFind');
 
   function computeFromCapacity(perCyl_kN, pressure_bar, rodRatio){
-    // area_mm2 = (perCyl_kN * 10000) / pressure_bar   (since 1 bar = 0.1 N/mm2)
+    // area_mm2 = (perCyl_kN * 10000) / pressure_bar  (1 bar = 0.1 N/mm2)
     const area_mm2 = (perCyl_kN * 10000) / pressure_bar;
     const bore = mm_from_area(area_mm2);
     const rod = bore * rodRatio;
     return {bore, rod};
   }
-
   function computeFromWeightNoPressure(perCyl_kN, rodRatio){
-    // USER REQUEST: compute using weight without pressure — no default pressure should be used.
-    // For pressureless calculation we need to derive a practical pressure from typical design practice.
-    // We'll use an empirical approach: determine bore using a conservative assumed stress of 20 N/mm² (i.e., 20000 N per mm²) as a design strength proxy.
-    // Convert: perCyl_kN *1000 N, stress N/mm2 = 20 -> area mm2 = Force / stress
-    const stress_N_per_mm2 = 20; // empirical design assumed stress (N/mm2)
-    const area_mm2 = (perCyl_kN * 1000) / stress_N_per_mm2;
+    // Use material allowable stress approach: assume allowable stress = 20 N/mm2 (conservative)
+    const stress = 20; // N/mm2
+    const area_mm2 = (perCyl_kN * 1000) / stress;
     const bore = mm_from_area(area_mm2);
     const rod = bore * rodRatio;
     return {bore, rod};
@@ -166,15 +251,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const perCyl = total_kN / Math.max(qty,1);
     $('calcPerCyl').textContent = fmt(perCyl) + ' kN';
 
-    // If pressure provided and >0, use capacity+pressure formula
     if(pressure && pressure > 0){
+      // compute using pressure
       const r = computeFromCapacity(perCyl, pressure, rodRatio);
       $('calcBore').textContent = fmt(r.bore) + ' mm';
       $('calcRod').textContent = fmt(r.rod) + ' mm';
       findOverlay.dataset.bore = r.bore;
       findOverlay.dataset.rod = r.rod;
     } else {
-      // No pressure provided: compute purely from weight (without using any default pressure)
+      // compute purely from weight (no default pressure used)
       const r = computeFromWeightNoPressure(perCyl, rodRatio);
       $('calcBore').textContent = fmt(r.bore) + ' mm';
       $('calcRod').textContent = fmt(r.rod) + ' mm';
@@ -191,7 +276,6 @@ document.addEventListener('DOMContentLoaded', () => {
   findBtn.addEventListener('click', () => { findOverlay.style.display = 'flex'; updateFindCalc(); });
   closeFind.addEventListener('click', () => { findOverlay.style.display = 'none'; });
   findOverlay.addEventListener('click', (e) => { if(e.target === findOverlay) findOverlay.style.display = 'none'; });
-
   applyFind.addEventListener('click', () => {
     const b = parseFloat(findOverlay.dataset.bore || 0);
     const r = parseFloat(findOverlay.dataset.rod || 0);
@@ -202,6 +286,6 @@ document.addEventListener('DOMContentLoaded', () => {
     findOverlay.style.display = 'none';
   });
 
-  // Hook computeAll initially for defaults when app is shown
+  // initial compute
   computeAll();
 });
