@@ -1,10 +1,11 @@
+
 :root{--accent:#1e88e5;--muted:#64748b;--highlight:#e3f2fd}
 *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0}
 html{font-size:16px}
 body{background:#f3f7fb;color:#0b1724}
-.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.6);z-index:200;padding:12px}
+.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(2,6,23,0.6);z-index:200}
 .modal{background:#fff;padding:20px;border-radius:12px;width:360px;box-shadow:0 10px 40px rgba(2,6,23,0.4);text-align:center;max-height:90vh;overflow:auto}
-.modal.large{width:920px;max-width:100%}
+.modal.large{width:960px;max-width:95%}
 .modal input, .modal select, input, select {font-size:16px}
 .modal .muted{color:#ef4444;margin-top:8px}
 .topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:linear-gradient(90deg,var(--accent),#1565c0);color:#fff}
@@ -14,8 +15,8 @@ body{background:#f3f7fb;color:#0b1724}
 .btn.outline{background:transparent;border:1px solid rgba(255,255,255,0.2);color:#fff}
 .container{max-width:1200px;margin:20px auto;padding:20px}
 h1{text-align:center;color:var(--accent);margin-bottom:14px}
-.inputs-row{display:flex;gap:12px;align-items:center;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
-.field{margin-bottom:8px;min-width:140px}
+.inputs-row{display:flex;gap:12px;align-items:center;justify-content:center;margin-bottom:12px}
+.field{margin-bottom:8px}
 .field.small{min-width:160px}
 .columns{display:flex;gap:18px;flex-wrap:wrap}
 .card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 24px rgba(11,20,34,0.05);flex:1;min-width:320px}
@@ -28,7 +29,7 @@ input[type=number],select,input[type=text]{padding:10px;border-radius:8px;border
 .res .label{font-size:12px;color:var(--muted)}
 .res .value{font-weight:700;margin-top:6px}
 .highlight{background:var(--highlight);border:1px solid rgba(30,136,229,0.08);padding:10px;border-radius:8px}
-.final-box{display:flex;gap:12px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+.final-box{display:flex;gap:12px;justify-content:center;margin-top:18px}
 .final-inner{padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(11,20,34,0.06);min-width:220px;text-align:center}
 .bore-box{background:#e7f3ff;border:1px solid rgba(30,136,229,0.18)}
 .rod-box{background:#fff6ea;border:1px solid rgba(255,160,38,0.18)}
