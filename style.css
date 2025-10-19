@@ -40,8 +40,21 @@ button:hover {
   color: red;
 }
 
+header {
+  text-align: center;
+  background: #0078d7;
+  color: white;
+  padding: 10px 0;
+  margin-bottom: 10px;
+}
+
 .main-app {
   padding: 20px;
+}
+
+.controls {
+  margin-bottom: 10px;
+  text-align: center;
 }
 
 table {
@@ -54,10 +67,6 @@ th, td {
   border: 1px solid #ccc;
   text-align: center;
   padding: 6px;
-}
-
-.controls {
-  margin-bottom: 10px;
 }
 
 .modal {
@@ -95,9 +104,17 @@ th, td {
   margin-top: 15px;
 }
 
+.version-text {
+  font-size: 0.9em;
+  color: #555;
+  margin-bottom: 10px;
+}
+
 footer {
   text-align: center;
   margin-top: 20px;
+  background: #f0f0f0;
+  padding: 10px 0;
 }
 
 footer .version {
