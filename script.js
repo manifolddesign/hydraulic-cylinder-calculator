@@ -1,6 +1,6 @@
 
 /* script v1.2.0 - implements calculations, find modal, export, login */
-const DEFAULT_PWD = 'Hydraulics@2025';
+const DEFAULT_PWD = 'Hydra@2025';
 document.addEventListener('DOMContentLoaded', () => {
   const $ = id => document.getElementById(id);
 
@@ -13,25 +13,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if(v === DEFAULT_PWD){ pwdError.textContent = 'Unlocked successfully.'; pwdOverlay.style.display='none'; topbar.style.display='flex'; app.style.display='block'; computeAll(); }
     else { pwdError.textContent = 'Incorrect password — please try again.'; pwdInput.focus(); }
   });
-// Find Cylinder Size Modal
-const findOverlay = document.getElementById('findModalOverlay');
-const findBtn = document.getElementById('findBtn');
-const closeFind = document.getElementById('closeFind');
+  
+ // Find Cylinder Size Modal
+ const findOverlay = document.getElementById('findModalOverlay');
+ const findBtn = document.getElementById('findBtn');
+ const closeFind = document.getElementById('closeFind');
 
-if (findBtn && findOverlay) {
+ if (findBtn && findOverlay) {
   findBtn.addEventListener('click', () => {
     findOverlay.style.display = 'flex';
   });
 }
 
-if (closeFind && findOverlay) {
+ if (closeFind && findOverlay) {
   closeFind.addEventListener('click', () => {
     findOverlay.style.display = 'none';
   });
 }
 
-// Prevent closing when clicking outside
-findOverlay.addEventListener('click', (e) => {
+ // Prevent closing when clicking outside
+ findOverlay.addEventListener('click', (e) => {
   if (e.target === findOverlay) {
     // do nothing — modal stays open
     e.stopPropagation();
