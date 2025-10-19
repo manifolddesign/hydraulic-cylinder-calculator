@@ -1,7 +1,101 @@
-
-body{font-family:Arial,Helvetica,sans-serif;background:#f3f7fb;color:#0b1724;padding:0;margin:0}
-.container{max-width:1000px;margin:14px auto;padding:16px;background:#fff;border-radius:8px;box-shadow:0 6px 18px rgba(11,20,34,0.06)}
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#1565c0;color:#fff}
-.btn{background:#fff;color:#1565c0;padding:8px 12px;border-radius:8px;border:0;cursor:pointer;font-weight:700;margin:4px}
-.savedTable{width:100%;margin-top:10px;border-collapse:collapse}
-.savedTable th,.savedTable td{padding:8px;border-bottom:1px solid #e6eef8}
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f5ff;
+  margin: 0;
+  padding: 0;
+  color: #002b5c;
+}
+header {
+  text-align: center;
+  background-color: #0074d9;
+  color: #fff;
+  padding: 10px;
+  position: relative;
+}
+header .version {
+  position: absolute;
+  right: 15px;
+  bottom: 5px;
+  font-size: 14px;
+}
+footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background-color: #0074d9;
+  color: #fff;
+}
+footer .version {
+  position: absolute;
+  right: 20px;
+  font-size: 12px;
+}
+#loginContainer {
+  text-align: center;
+  margin-top: 100px;
+}
+#passwordInput {
+  margin-right: 5px;
+  padding: 6px;
+}
+#loginError {
+  color: red;
+}
+.controls {
+  text-align: center;
+  margin: 15px;
+}
+button {
+  background-color: #0074d9;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 4px;
+}
+button:hover {
+  background-color: #005fa3;
+}
+table {
+  width: 90%;
+  margin: auto;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 8px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+}
+.modal-buttons {
+  text-align: center;
+  margin-top: 20px;
+}
+.modal-buttons button {
+  margin: 0 10px;
+}
+@media (max-width:600px) {
+  table { width: 100%; font-size: 12px; }
+  .modal-content { width: 95%; }
+}
