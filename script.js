@@ -1,182 +1,311 @@
-// ------------------------------
-// LOGIN SECTION
-// ------------------------------
-document.getElementById("unlockBtn").addEventListener("click", function() {
-  const pwd = document.getElementById("passwordInput").value.trim();
-  if (pwd === "Hydra@2025") {
-    document.getElementById("loginContainer").style.display = "none";
-    document.getElementById("mainApp").style.display = "block";
+/* Hydraulic Cylinder Calculator - script.js (v1.3.3 Final Stable)
+   © Design Hydraulics 2025 — All Rights Reserved
+   ---------------------------------------------------------------
+   ✅ Password: Hydra@2025
+   ✅ Find Cylinder Size modal: no Clear button, stays open
+   ✅ All Cylinders Hold Entered Weight logic fixed
+   ✅ Rod safety factor (Euler) visible only in modal
+   ✅ Export to Excel with SheetJS template or CSV fallback
+   ✅ Mobile + Desktop layout supported
+*/
+
+// ------------------ CONFIG ------------------
+const APP_VERSION = "v1.3.3";
+const LOGIN_PASSWORD = "Hydra@2025";
+
+// ------------------ LOGIN ------------------
+const loginContainer = document.getElementById("loginContainer");
+const mainApp = document.getElementById("mainApp");
+const unlockBtn = document.getElementById("unlockBtn");
+const pwdInput = document.getElementById("passwordInput");
+const loginError = document.getElementById("loginError");
+
+unlockBtn?.addEventListener("click", () => {
+  const val = pwdInput?.value.trim();
+  if (val === LOGIN_PASSWORD) {
+    loginContainer.style.display = "none";
+    mainApp.style.display = "block";
   } else {
-    document.getElementById("loginError").innerText = "Incorrect password. Please try again.";
+    loginError.textContent = "Incorrect password. Please try again.";
   }
 });
 
-// ------------------------------
-// CYLINDER LIST MANAGEMENT
-// ------------------------------
-const cylinderTable = document.getElementById("cylinderTable").getElementsByTagName("tbody")[0];
-let cylinderCount = 0;
+// ------------------ UTILITIES ------------------
+const toNumber = v => (isNaN(Number(v)) ? 0 : Number(v));
+const round = (n, dp = 2) => Number(n.toFixed(dp));
 
-document.getElementById("addCylinderBtn").addEventListener("click", addCylinder);
+// ------------------ TABLE HANDLERS ------------------
+const tbody = document.querySelector("#cylinderTable tbody");
+let cylIndex = 0;
 
-function addCylinder() {
-  cylinderCount++;
-  const row = cylinderTable.insertRow();
-  row.innerHTML = `
+function createRow(defaults = {}) {
+  cylIndex++;
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
     <td><input type="checkbox" class="rowSelect"></td>
-    <td><input type="text" value="C${cylinderCount}" class="cylName"></td>
-    <td><input type="number" class="bore" placeholder="Enter"></td>
-    <td><input type="number" class="rod" placeholder="Enter"></td>
-    <td><input type="number" class="stroke" placeholder="Enter"></td>
+    <td><input class="cName" value="${defaults.name || "C" + cylIndex}"></td>
+    <td><input class="bore" type="number" placeholder="Enter"></td>
+    <td><input class="rod" type="number" placeholder="Enter"></td>
+    <td><input class="stroke" type="number" placeholder="Enter"></td>
     <td>
       <select class="timeOpt">
         <option value="ext">Extension</option>
         <option value="ret">Retraction</option>
       </select>
     </td>
-    <td><input type="number" class="timeVal" placeholder="Enter"></td>
+    <td><input class="timeVal" type="number" placeholder="Enter"></td>
     <td>
       <select class="pressOpt">
         <option value="pressure">Pressure</option>
         <option value="force">Force</option>
       </select>
     </td>
-    <td><input type="number" class="pressVal" placeholder="Enter"></td>
+    <td><input class="pressVal" type="number" placeholder="Enter"></td>
     <td>
       <button class="editBtn">Edit</button>
       <button class="delBtn">Delete</button>
     </td>
   `;
 
-  row.querySelector(".delBtn").addEventListener("click", () => {
-    row.remove();
-  });
-
-  row.querySelector(".editBtn").addEventListener("click", () => {
-    alert("Edit function can be expanded — placeholder retained from v1.2.2");
-  });
+  tr.querySelector(".delBtn").addEventListener("click", () => tr.remove());
+  tr.querySelector(".editBtn").addEventListener("click", () =>
+    alert("Edit directly in table.")
+  );
+  return tr;
 }
 
-// ------------------------------
-// SELECT ALL CHECKBOX
-// ------------------------------
+document.getElementById("addCylinderBtn")?.addEventListener("click", () => {
+  tbody.appendChild(createRow());
+});
+
 const selectAllCheckbox = document.getElementById("selectAllCheckbox");
-selectAllCheckbox.addEventListener("change", function() {
-  const allRows = document.querySelectorAll(".rowSelect");
-  allRows.forEach(chk => chk.checked = this.checked);
+selectAllCheckbox?.addEventListener("change", function () {
+  document
+    .querySelectorAll(".rowSelect")
+    .forEach(c => (c.checked = this.checked));
 });
 
-// ------------------------------
-// EXPORT TO EXCEL (base from v1.2.2)
-// ------------------------------
-document.getElementById("exportBtn").addEventListener("click", () => {
-  const rows = document.querySelectorAll("#cylinderTable tbody tr");
-  if (rows.length === 0) {
-    alert("No cylinders to export.");
-    return;
-  }
-
-  // Example export — you can expand as per your previous SheetJS logic
-  let exportData = [];
-  rows.forEach(r => {
-    exportData.push({
-      Name: r.querySelector(".cylName").value,
-      Bore: r.querySelector(".bore").value,
-      Rod: r.querySelector(".rod").value,
-      Stroke: r.querySelector(".stroke").value,
-      TimeOption: r.querySelector(".timeOpt").value,
-      TimeValue: r.querySelector(".timeVal").value,
-      PressureOption: r.querySelector(".pressOpt").value,
-      PressureValue: r.querySelector(".pressVal").value
-    });
-  });
-
-  console.log("Export data:", exportData);
-  alert("Export placeholder — connect to your Excel template (v1.2.2 logic retained).");
+document.getElementById("selectAllBtn")?.addEventListener("click", () => {
+  document
+    .querySelectorAll(".rowSelect")
+    .forEach(c => (c.checked = true));
 });
-// ------------------------------
-// FIND CYLINDER SIZE  (new v1.3.2 modal logic)
-// ------------------------------
+
+// ------------------ FIND MODAL ------------------
 const findModal = document.getElementById("findModal");
+const findBtn = document.getElementById("findCylinderBtn");
+const closeFindBtn = document.getElementById("closeFindBtn");
+const resetFindBtn = document.getElementById("resetFindBtn");
+const applyFindBtn = document.getElementById("applyFindBtn");
+const resultsContainer = document.getElementById("resultsContainer");
 
-// open / close modal
-document.getElementById("findCylinderBtn").onclick = () => {
+const weightInput = document.getElementById("weightInput");
+const weightUnit = document.getElementById("weightUnit");
+const capacityInput = document.getElementById("capacityInput");
+const pressureInput = document.getElementById("pressureInput");
+const strokeInput = document.getElementById("strokeInput");
+const noOfCylInput = document.getElementById("noOfCylInput");
+const allCylHoldChk = document.getElementById("allCylHoldChk");
+
+findBtn?.addEventListener("click", () => {
   findModal.style.display = "flex";
-};
-document.getElementById("closeFindBtn").onclick = () => {
-  findModal.style.display = "none";
-};
+  resultsContainer.innerHTML = "";
+});
 
-// stop closing when clicking outside content
-findModal.addEventListener("click", (e) => { e.stopPropagation(); });
+closeFindBtn?.addEventListener("click", () => (findModal.style.display = "none"));
+resetFindBtn?.addEventListener("click", () => {
+  findModal.querySelectorAll("input").forEach(i => (i.value = ""));
+  allCylHoldChk.checked = false;
+  resultsContainer.innerHTML = "";
+});
 
-// reset modal inputs
-document.getElementById("resetFindBtn").onclick = () => {
-  document.querySelectorAll("#findModal input").forEach(i => i.value = "");
-  document.getElementById("allCylHoldChk").checked = false;
-  document.getElementById("resultsContainer").innerHTML = "";
-};
+findModal?.addEventListener("click", e => e.stopPropagation());
+findModal
+  ?.querySelector(".modal-content")
+  ?.addEventListener("click", e => e.stopPropagation());
 
-// ------------------------------
-// FIND CYLINDER  ->  CALCULATIONS
-// ------------------------------
-document.getElementById("applyFindBtn").onclick = () => {
-  const weightVal   = parseFloat(document.getElementById("weightInput").value) || 0;
-  const weightUnit  = document.getElementById("weightUnit").value;
-  const capacity    = parseFloat(document.getElementById("capacityInput").value) || 0;
-  const pressure    = parseFloat(document.getElementById("pressureInput").value) || 0;
-  const stroke      = parseFloat(document.getElementById("strokeInput").value) || 0;
-  const cylCount    = parseInt(document.getElementById("noOfCylInput").value) || 1;
-  const allHold     = document.getElementById("allCylHoldChk").checked;
+// ------------------ ISO LISTS ------------------
+const ISO_BORE = [25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250, 320];
+const ISO_ROD = [12, 16, 20, 25, 28, 32, 36, 40, 45, 50, 56, 63, 70, 80];
+const nearest = (list, val) =>
+  list.reduce((a, b) => (Math.abs(b - val) < Math.abs(a - val) ? b : a));
 
-  const resultsDiv  = document.getElementById("resultsContainer");
-  resultsDiv.innerHTML = "";
+// ------------------ EULER BUCKLING ------------------
+function eulerCriticalLoad(isoRod, stroke, E = 210000, K = 1) {
+  const I = (Math.PI / 64) * Math.pow(isoRod, 4);
+  return (Math.PI ** 2 * E * I) / Math.pow(K * stroke, 2);
+}
 
-  // weight in Newtons
-  let totalWeightN = weightUnit === "kg" ? weightVal * 9.81 : weightVal * 1000 * 9.81;
-  // per cylinder load logic
-  let perCylLoad = allHold ? totalWeightN : totalWeightN / cylCount;
+// ------------------ FIND CYLINDER APPLY ------------------
+applyFindBtn?.addEventListener("click", () => {
+  const weightVal = toNumber(weightInput.value);
+  const unit = weightUnit.value;
+  const capacity = toNumber(capacityInput.value);
+  const pressure = toNumber(pressureInput.value);
+  const stroke = toNumber(strokeInput.value);
+  const noOfCyl = Math.max(1, parseInt(noOfCylInput.value) || 1);
+  const allHold = allCylHoldChk.checked;
 
-  // --- bore diameter calculation ---
-  let boreDia = 0;
-  if (capacity > 0 && pressure > 0) {
-    boreDia = Math.sqrt((4 * (capacity * 1000)) / (Math.PI * pressure * 1e5)) * 1000;
-  } else if (weightVal > 0 && pressure > 0) {
-    boreDia = Math.sqrt((4 * perCylLoad) / (Math.PI * pressure * 1e5)) * 1000;
-  } else if (weightVal > 0 && pressure === 0) {
-    boreDia = Math.pow(perCylLoad / (0.6 * 1e5), 0.5) * 10;
+  let totalWeightN = 0;
+  if (weightVal > 0) {
+    totalWeightN =
+      unit === "kg" ? weightVal * 9.81 : weightVal * 1000 * 9.81;
   }
 
-  // --- rod diameter & ISO nearest ---
-  let rodDia = 0.7 * boreDia;
-  const isoBoreList = [25,32,40,50,63,80,100,125,160,200,250,320];
-  const isoRodList  = [12,16,20,25,28,32,36,40,45,50,56,63,70,80];
-  const isoBore = isoBoreList.reduce((a,b)=>Math.abs(b-boreDia)<Math.abs(a-boreDia)?b:a);
-  const isoRod  = isoRodList.reduce((a,b)=>Math.abs(b-rodDia)<Math.abs(a-boreDia)?b:a);
-
-  // --- safety factor check ---
-  let safetyMsg = "";
-  const E = 2.1e5, K = 1;
-  if (stroke > 0 && isoRod > 0) {
-    const critical = (Math.PI**2 * E * Math.PI*(isoRod/2)**4) / (4 * (K*stroke)**2);
-    const SF = critical / (perCylLoad/1000);
-    if (SF < 2)      safetyMsg = `<p style='color:red'>Rod may buckle (SF=${SF.toFixed(2)}).</p>`;
-    else if (SF < 3) safetyMsg = `<p style='color:orange'>Borderline safe (SF=${SF.toFixed(2)}).</p>`;
-    else             safetyMsg = `<p style='color:green'>Rod is safe (SF=${SF.toFixed(2)}).</p>`;
+  let perCylLoadN = 0;
+  if (totalWeightN > 0) {
+    perCylLoadN = allHold && noOfCyl > 1 ? totalWeightN / noOfCyl : totalWeightN;
   }
 
-  // display results
-  resultsDiv.innerHTML = `
-    <p>Calculated Bore Dia: ${boreDia.toFixed(2)} mm  (ISO: ${isoBore} mm)</p>
-    <p>Recommended Rod Dia: ${rodDia.toFixed(2)} mm (ISO: ${isoRod} mm)</p>
-    ${safetyMsg}
+  const capacityN = capacity > 0 ? capacity * 1000 : 0;
+  let bore_mm = 0;
+
+  if (capacityN > 0 && pressure > 0) {
+    const A_mm2 = (capacityN * 1e6) / (pressure * 1e5);
+    bore_mm = Math.sqrt((4 * A_mm2) / Math.PI);
+  } else if (perCylLoadN > 0 && pressure > 0) {
+    const A_mm2 = (perCylLoadN * 1e6) / (pressure * 1e5);
+    bore_mm = Math.sqrt((4 * A_mm2) / Math.PI);
+  } else if (perCylLoadN > 0 && pressure === 0) {
+    const sigma_all = 20; // N/mm2
+    const A_mm2 = perCylLoadN / sigma_all;
+    bore_mm = Math.sqrt((4 * A_mm2) / Math.PI);
+  }
+
+  const rod_mm = bore_mm * 0.7;
+  const isoBore = nearest(ISO_BORE, bore_mm);
+  const isoRod = nearest(ISO_ROD, rod_mm);
+
+  let safetyHtml = "";
+  if (stroke > 0 && isoRod > 0 && perCylLoadN > 0) {
+    const critN = eulerCriticalLoad(isoRod, stroke);
+    const SF = critN / perCylLoadN;
+    if (SF < 2)
+      safetyHtml = `<p style="color:red">Rod may buckle (SF=${round(SF, 2)}).</p>`;
+    else if (SF < 3)
+      safetyHtml = `<p style="color:orange">Borderline safe (SF=${round(SF, 2)}).</p>`;
+    else
+      safetyHtml = `<p style="color:green">Rod is safe (SF=${round(SF, 2)}).</p>`;
+  }
+
+  resultsContainer.innerHTML = `
+    <p>Calculated Bore Dia: ${round(bore_mm, 2)} mm (ISO: ${isoBore} mm)</p>
+    <p>Recommended Rod Dia: ${round(rod_mm, 2)} mm (ISO: ${isoRod} mm)</p>
+    ${safetyHtml}
   `;
 
-  // --- APPLY TO SELECTED CYLINDERS ---
-  const selectedRows = document.querySelectorAll(".rowSelect:checked");
-  selectedRows.forEach(chk => {
-    const row = chk.closest("tr");
+  const selected = document.querySelectorAll(".rowSelect:checked");
+  const targetRows =
+    selected.length > 0
+      ? Array.from(selected).map(chk => chk.closest("tr"))
+      : [tbody.querySelector("tr")];
+
+  targetRows.forEach(row => {
     row.querySelector(".bore").value = isoBore;
-    row.querySelector(".rod").value  = isoRod;
+    row.querySelector(".rod").value = isoRod;
+    if (stroke) row.querySelector(".stroke").value = stroke;
   });
-};
+});
+
+// ------------------ EXPORT TO EXCEL ------------------
+document.getElementById("exportBtn")?.addEventListener("click", () => {
+  if (typeof XLSX === "undefined") return fallbackCsvExport();
+
+  const tplPath = "Hydraulic Cylinder Reports.xlsx";
+  fetch(tplPath)
+    .then(res => res.arrayBuffer())
+    .then(data => {
+      const wb = XLSX.read(data, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = Array.from(document.querySelectorAll("#cylinderTable tbody tr"));
+      if (!rows.length) return alert("No cylinders to export.");
+
+      const setCell = (r, c, v) => {
+        const ref = XLSX.utils.encode_cell({ r, c });
+        ws[ref] = { v, t: typeof v === "number" ? "n" : "s" };
+      };
+
+      const startCol = 2;
+      let totalBoreFlow = 0,
+        totalRodFlow = 0,
+        totalBorePower = 0,
+        totalRodPower = 0;
+
+      rows.forEach((r, i) => {
+        const col = startCol + i;
+        const name = r.querySelector(".cName").value || `C${i + 1}`;
+        const bore = toNumber(r.querySelector(".bore").value);
+        const rod = toNumber(r.querySelector(".rod").value);
+        const stroke = toNumber(r.querySelector(".stroke").value);
+        const timeVal = toNumber(r.querySelector(".timeVal").value);
+        const pressVal = toNumber(r.querySelector(".pressVal").value);
+
+        const areaBore = Math.PI * (bore / 2) ** 2;
+        const volL = (areaBore * stroke) / 1e6;
+        const boreFlow = timeVal > 0 ? volL / (timeVal / 60) : 0;
+        const rodArea = Math.PI * (rod / 2) ** 2;
+        const rodVol = ((areaBore - rodArea) * stroke) / 1e6;
+        const rodFlow = timeVal > 0 ? rodVol / (timeVal / 60) : 0;
+
+        const borePower = (pressVal * boreFlow) / 600;
+        const rodPower = (pressVal * rodFlow) / 600;
+
+        totalBoreFlow += boreFlow;
+        totalRodFlow += rodFlow;
+        totalBorePower += borePower;
+        totalRodPower += rodPower;
+
+        setCell(1, col, name);
+        setCell(2, col, round(bore, 2));
+        setCell(3, col, round(rod, 2));
+        setCell(4, col, round(stroke, 2));
+        setCell(5, col, round(boreFlow, 3));
+        setCell(6, col, round(rodFlow, 3));
+      });
+
+      setCell(13, 2, round(totalBoreFlow, 3));
+      setCell(14, 2, round(totalRodFlow, 3));
+      setCell(16, 2, round(totalBorePower, 3));
+      setCell(17, 2, round(totalRodPower, 3));
+
+      XLSX.writeFile(wb, "Hydraulic_Calculator_Report_v1.3.3.xlsx");
+    })
+    .catch(() => fallbackCsvExport());
+});
+
+function fallbackCsvExport() {
+  const rows = Array.from(document.querySelectorAll("#cylinderTable tbody tr"));
+  if (!rows.length) return alert("No cylinders to export.");
+
+  const data = rows.map((r, i) => ({
+    Name: r.querySelector(".cName").value || `C${i + 1}`,
+    Bore: toNumber(r.querySelector(".bore").value),
+    Rod: toNumber(r.querySelector(".rod").value),
+    Stroke: toNumber(r.querySelector(".stroke").value),
+    Time: toNumber(r.querySelector(".timeVal").value),
+    Pressure: toNumber(r.querySelector(".pressVal").value)
+  }));
+
+  const headers = Object.keys(data[0]);
+  const csv = [
+    headers.join(","),
+    ...data.map(row =>
+      headers.map(h => `"${row[h] ?? ""}"`).join(",")
+    )
+  ].join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "Hydraulic_Calculator_Report_v1.3.3.csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// ------------------ FOOTER VERSION ------------------
+document
+  .querySelectorAll("footer .version")
+  .forEach(v => (v.textContent = APP_VERSION));
