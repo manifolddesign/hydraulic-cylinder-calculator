@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
   pwdBtn.addEventListener('click', ()=>{
     const v = (pwdInput.value||'').trim();
     if(!v){ pwdError.textContent = 'Please enter password.'; return; }
-    if(v === DEFAULT_PWD){ pwdError.textContent = 'Unlocked successfully.'; pwdOverlay.style.display='none'; topbar.style.display='flex'; app.style.display='block'; computeAll(); }
+    if(v.toLowerCase() === DEFAULT_PWD.toLowerCase()){ pwdError.textContent = 'Unlocked successfully.'; pwdOverlay.style.display='none'; topbar.style.display='flex'; app.style.display='block'; computeAll(); }
     else { pwdError.textContent = 'Incorrect password — please try again.'; pwdInput.focus(); }
   });
 
