@@ -1,101 +1,180 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hydraulic Cylinder Calculation</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hydraulic Cylinder Calculation — v1.3.1</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- LOGIN PAGE -->
-  <div id="loginContainer" class="login-box">
-    <h2>Hydraulic Cylinder Calculation</h2>
-    <p class="version-text">Version: v1.3.3</p>
-    <div class="login-inputs">
-      <label for="passwordInput">Password:</label>
-      <input type="password" id="passwordInput" placeholder="Enter Password" />
-      <button id="unlockBtn">Unlock</button>
-      <p id="loginError" class="error"></p>
+  <!-- Password Modal -->
+  <div id="pwdOverlay" class="overlay">
+    <div class="modal">
+      <h2>Enter Password</h2>
+      <div style="display:flex;gap:8px;align-items:center;justify-content:center;width:100%">
+        <input id="pwdInput" type="password" placeholder="Enter password" style="flex:1;padding:10px;border-radius:8px;border:1px solid #e6eef8">
+        <button id="pwdBtn" class="btn">Unlock</button>
+      </div>
+      <p id="pwdError" class="muted"></p>
+      <div class="ver">Version: v1.3.1</div>
     </div>
   </div>
 
-  <!-- MAIN APPLICATION -->
-  <div id="mainApp" style="display:none;">
-    <header>
-      <h1>Hydraulic Cylinder Calculation</h1>
-    </header>
+  <div id="topbar" class="topbar" style="display:none">
+    <div class="brand">Hydraulic Cylinder Calculation</div>
+    <div class="top-actions">
+      <button id="findBtn" class="btn">Find Cylinder Size</button>
+      <button id="exportBtn" class="btn">Export to Excel</button>
+      <button id="resetBtn" class="btn outline">Reset</button>
+    </div>
+  </div>
 
-    <div class="controls">
-      <button id="addCylinderBtn">Add Cylinder</button>
-      <button id="findCylinderBtn">Find Cylinder Size</button>
-      <button id="exportBtn">Export to Excel</button>
-      <label><input type="checkbox" id="selectAllCheckbox"> Select All</label>
+  <main id="app" class="container" style="display:none">
+    <h1>Hydraulic Cylinder Calculation</h1>
+
+    <div class="row inputs-row">
+      <div class="field small"><label>Name of the Cylinder</label><input id="cylName" type="text" placeholder="Enter name"></div>
+      <div class="field small"><label>No. of cylinders</label><input id="nCyl" type="number" min="1" value="1" placeholder="Enter number"></div>
+      <div class="field small"><label>Stroke (mm)</label><input id="stroke" type="number" value="1500" placeholder="Enter stroke"></div>
+      <div class="field small switchRow"><label>Regeneration</label><label class="switch"><input id="regen" type="checkbox"><span class="slider"></span></label></div>
     </div>
 
-    <table id="cylinderTable">
+    <div class="columns">
+      <section class="card">
+        <h2>Bore Side</h2>
+        <div class="field"><label>Bore diameter (mm)</label><input id="boreDia" type="number" value="320" step="0.01" placeholder="Enter bore"></div>
+        <div class="field inline"><label>Time option</label>
+          <select id="timeUnitB"><option value="sec">sec</option><option value="mmsec">mm/sec</option><option value="msec">m/sec</option><option value="mmin">m/min</option></select>
+          <input id="timeValB" type="number" step="0.01" placeholder="Enter value">
+        </div>
+        <div class="field inline"><label>Pressure/Force option</label>
+          <select id="pfModeB"><option value="pressure">Pressure (bar)</option><option value="force">Force (kN)</option></select>
+          <input id="pfValB" type="number" step="0.001" placeholder="Enter value">
+        </div>
+        <div class="results" id="boreResults">
+          <div class="res"><div class="label">Bore area</div><div id="areaB" class="value output">--</div></div>
+          <div class="res"><div class="label">Bore time</div><div id="timeOutB" class="value output">--</div></div>
+          <div class="res highlight"><div class="label">Bore flow (per cyl)</div><div id="flowB" class="value output">--</div></div>
+          <div class="res highlight"><div class="label">Total bore flow (L/min)</div><div id="volBtot" class="value output">--</div></div>
+          <div class="res"><div class="label">Bore pressure</div><div id="pressureB" class="value output">--</div></div>
+          <div class="res"><div class="label">Bore force</div><div id="forceB" class="value output">--</div></div>
+          <div class="res final bore-final"><div class="label">Bore power (total)</div><div id="powerBtot" class="value output">-- kW</div></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Rod Side</h2>
+        <div class="field"><label>Rod diameter (mm)</label><input id="rodDia" type="number" value="220" step="0.01" placeholder="Enter rod"></div>
+        <div class="field inline"><label>Time option</label>
+          <select id="timeUnitR"><option value="sec">sec</option><option value="mmsec">mm/sec</option><option value="msec">m/sec</option><option value="mmin">m/min</option></select>
+          <input id="timeValR" type="number" step="0.01" placeholder="Enter value">
+        </div>
+        <div class="field inline"><label>Pressure/Force option</label>
+          <select id="pfModeR"><option value="pressure">Pressure (bar)</option><option value="force">Force (kN)</option></select>
+          <input id="pfValR" type="number" step="0.001" placeholder="Enter value">
+        </div>
+        <div class="results" id="rodResults">
+          <div class="res"><div class="label">Rod area</div><div id="areaR" class="value output">--</div></div>
+          <div class="res"><div class="label">Rod time</div><div id="timeOutR" class="value output">--</div></div>
+          <div class="res highlight"><div class="label">Rod flow (per cyl)</div><div id="flowR" class="value output">--</div></div>
+          <div class="res highlight"><div class="label">Total rod flow (L/min)</div><div id="volRtot" class="value output">--</div></div>
+          <div class="res"><div class="label">Rod pressure</div><div id="pressureR" class="value output">--</div></div>
+          <div class="res"><div class="label">Rod force</div><div id="forceR" class="value output">--</div></div>
+          <div class="res final rod-final"><div class="label">Rod power (total)</div><div id="powerRtot" class="value output">-- kW</div></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="final-box">
+      <div class="final-inner bore-box"><div class="final-label">Bore Power Total</div><div id="finalBore" class="final-value">-- kW</div></div>
+      <div class="final-inner rod-box"><div class="final-label">Rod Power Total</div><div id="finalRod" class="final-value">-- kW</div></div>
+    </div>
+
+    <div style="text-align:center;margin-top:16px;">
+      <button id="addBtn" class="btn">Add Cylinder</button>
+    </div>
+
+    <h3 class="savedTitle">Saved Cylinders</h3>
+    <table id="savedList" class="savedTable">
       <thead>
         <tr>
-          <th>Select</th>
+          <th><input type="checkbox" id="selectAllHeader" title="Select/unselect all"></th>
           <th>Name</th>
-          <th>Bore Dia (mm)</th>
-          <th>Rod Dia (mm)</th>
-          <th>Stroke (mm)</th>
-          <th>Time Option</th>
-          <th>Time (sec)</th>
-          <th>Pressure/Force Option</th>
-          <th>Value</th>
-          <th>Action</th>
+          <th>Specification</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
 
-    <!-- FIND CYLINDER MODAL -->
-    <div id="findModal" class="modal">
-      <div class="modal-content">
-        <h3>Find Cylinder Size</h3>
+    <footer>© Design Hydraulics@2025 | All Rights Reserved</footer>
+  </main>
 
-        <label>Weight:</label>
-        <input type="number" id="weightInput" placeholder="Enter" />
-        <select id="weightUnit">
-          <option value="tonne">tonne</option>
-          <option value="kg">kg</option>
-        </select>
+  <!-- Find Cylinder Size Modal -->
+  <div id="findModalOverlay" class="overlay" style="display:none">
+    <div class="modal large" role="dialog" aria-modal="true">
+      <h2>Find Cylinder Size</h2>
 
-        <label>Capacity (kN):</label>
-        <input type="number" id="capacityInput" placeholder="Enter" />
+      <div class="grid-2">
+        <div class="field"><label>Enter weight</label><input id="inputWeight" type="number" step="0.001" placeholder="Enter weight"></div>
+        <div class="field"><label>Weight unit</label><select id="weightUnit"><option value="tonne">Tonne</option><option value="kg">Kg</option></select></div>
+      </div>
 
-        <label>Pressure (bar):</label>
-        <input type="number" id="pressureInput" placeholder="Enter" />
+      <div class="grid-2">
+        <div class="field"><label>Capacity</label><input id="inputCapacity" type="number" step="0.001" placeholder="Enter capacity"></div>
+        <div class="field"><label>Capacity unit</label><select id="capUnit"><option value="kN">kN</option><option value="N">N</option></select></div>
+      </div>
 
-        <label>Stroke (mm):</label>
-        <input type="number" id="strokeInput" placeholder="Enter" />
+      <div class="grid-2">
+        <div class="field"><label>No. of Cylinders</label><input id="inputQty" type="number" min="1" value="1" placeholder="Enter number"></div>
+        <div class="field"><label>All cylinders hold entered weight</label><label class="switch"><input id="inputEqual" type="checkbox"><span class="slider"></span></label></div>
+      </div>
 
-        <label>No. of Cylinders:</label>
-        <input type="number" id="noOfCylInput" placeholder="Enter" />
+      <div class="grid-2">
+        <div class="field"><label>Pressure (bar, optional)</label><input id="inputPressure" type="number" step="0.1" placeholder="Enter pressure"></div>
+        <div class="field"><label>Safety Factor (Bore)</label><select id="sfBore"><option value="1.1">1.10</option><option value="1.25" selected>1.25</option><option value="1.5">1.50</option></select></div>
+      </div>
 
-        <label>
-          <input type="checkbox" id="allCylHoldChk" />
-          All Cylinders Hold Entered Weight
-        </label>
+      <div class="grid-2">
+        <div class="field"><label>Rod Type</label><select id="rodType"><option value="light">Light — 60% of bore</option><option value="standard" selected>Standard — 70% of bore</option><option value="heavy">Heavy — 80% of bore</option></select></div>
+        <div class="field"><label>Stroke (mm)</label><input id="inputStroke" type="number" step="1" placeholder="Enter stroke for buckling check"></div>
+      </div>
 
-        <div id="resultsContainer"></div>
+      <div class="grid-2">
+        <div class="field"><label>End Condition</label><select id="endCond"><option value="0.5">Fixed - Fixed (K=0.5)</option><option value="0.7">Fixed - Pinned (K=0.7)</option><option value="1.0" selected>Pinned - Pinned (K=1.0)</option><option value="2.0">Cantilever (K=2.0)</option></select></div>
+        <div class="field"><label>Material Yield (MPa)</label><input id="matYield" type="number" value="400" step="1"></div>
+      </div>
 
-        <div class="modal-actions">
-          <button id="applyFindBtn">Apply</button>
-          <button id="resetFindBtn">Reset</button>
-          <button id="closeFindBtn">Close</button>
+      <div class="results modal-results">
+        <div class="res"><div class="label">Per-cylinder load</div><div id="calcPerCyl" class="value output">-- kN</div></div>
+        <div class="res"><div class="label">Calculated bore</div><div id="calcBore" class="value output">-- mm</div></div>
+        <div class="res"><div class="label">Calculated rod</div><div id="calcRod" class="value output">-- mm</div></div>
+        <div class="res"><div class="label">Nearest ISO bore</div><div id="calcIso" class="value output">--</div></div>
+      </div>
+
+      <!-- Rod safety factor check inside modal -->
+      <div style="margin-top:12px;border-top:1px solid #eef5fb;padding-top:12px">
+        <h3 style="margin:0 0 8px 0">Rod Safety Factor Check (Buckling)</h3>
+        <div class="grid-2">
+          <div class="field"><label>Buckling Safety Factor target</label><input id="buckSF" type="number" value="2.0" step="0.1"></div>
+          <div class="field"><label>&nbsp;</label><select id="dummy"></select></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>Result</label><div id="rodSFResult" class="value output">--</div></div>
+          <div class="field" style="display:flex;align-items:flex-end;justify-content:flex-end"><button id="checkRodSF" class="btn">Check Rod Safety Factor</button></div>
         </div>
       </div>
-    </div>
 
-    <footer>
-      <p>© Design Hydraulics 2025</p>
-      <p class="version">v1.3.3</p>
-    </footer>
+      <div class="modal-actions-row">
+        <button id="calcFind" class="btn">Calculate</button>
+        <button id="applyFind" class="btn">Apply</button>
+        <button id="resetFind" class="btn">Reset</button>
+        <button id="closeFind" class="btn">Close</button>
+      </div>
+    </div>
   </div>
 
-  <script src="script.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
