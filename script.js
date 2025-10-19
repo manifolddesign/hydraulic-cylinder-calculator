@@ -1,19 +1,23 @@
-
-/* script v1.2.0 - implements calculations, find modal, export, login */
-const DEFAULT_PWD = 'Hydra';
-if (v.toLowerCase() === DEFAULT_PWD.toLowerCase()) {
 document.addEventListener('DOMContentLoaded', () => {
-  const $ = id => document.getElementById(id);
+  const pwdInput = document.getElementById('pwdInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const overlay = document.getElementById('overlay');
 
-  // login
-  const pwdOverlay = $('pwdOverlay'), pwdInput = $('pwdInput'), pwdBtn = $('pwdBtn'), pwdError = $('pwdError');
-  const topbar = $('topbar'), app = $('app');
-  pwdBtn.addEventListener('click', ()=>{
-    const v = (pwdInput.value||'').trim();
-    if(!v){ pwdError.textContent = 'Please enter password.'; return; }
-    if(v.toLowerCase() === DEFAULT_PWD.toLowerCase()){ pwdError.textContent = 'Unlocked successfully.'; pwdOverlay.style.display='none'; topbar.style.display='flex'; app.style.display='block'; computeAll(); }
-    else { pwdError.textContent = 'Incorrect password — please try again.'; pwdInput.focus(); }
-  });
+  const DEFAULT_PWD = 'Hydra';
+
+  if (loginBtn) {
+    loginBtn.addEventListener('click', () => {
+      const v = pwdInput.value.trim();
+      // Case-insensitive password check
+      if (v.toLowerCase() === DEFAULT_PWD.toLowerCase()) {
+        overlay.style.display = 'none';
+      } else {
+        alert('Incorrect password');
+      }
+    });
+  }
+
+  // --- keep the rest of your initialization code below here ---
 
   // helpers
   function area_mm2(d){ return Math.PI*Math.pow(d/2,2); }
