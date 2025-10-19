@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
     computeAll(); findOverlay.style.display='none';
   });
 // ---------------- Rod Safety (Euler buckling) ----------------
-const E_mod = 2.1e5; // N/mm²
+const E_mod = 2.1e5; // N/mm² (Young's modulus)
 
 function computeRodSafety() {
   const statusDiv = document.getElementById('rodSafetyStatus');
@@ -263,43 +263,47 @@ function computeRodSafety() {
   const load_kN = parseFloat(perText.replace(/[^\d.\-]/g, '')) || 0;
   const loadN = load_kN * 1000;
 
-  // warn if incomplete
+  // when input incomplete
   if (!L || !d || !loadN) {
     statusDiv.textContent = '⚠️ Enter stroke length to check safety';
     statusDiv.className = 'safety-status safety-warning';
     return;
   }
 
-  // Euler buckling
-  const I = (Math.PI * Math.pow(d, 4)) / 64;
-  const Pcr = (Math.pow(Math.PI, 2) * E_mod * I) / Math.pow(K * L, 2);
-  const margin = ((Pcr / loadN - 1) * 100).toFixed(1);
+  // Euler buckling calculation
+  const I = (Math.PI * Math.pow(d, 4)) / 64; // mm⁴
+  const Pcr = (Math.pow(Math.PI, 2) * E_mod * I) / Math.pow(K * L, 2); // N
+  const Pcr_kN = Pcr / 1000;
+  const margin = ((Pcr / loadN - 1) * 100).toFixed(2);
 
   if (Pcr > 2 * loadN) {
-    statusDiv.textContent = `Rod Safe — ${margin}% margin`;
+    statusDiv.textContent = `Rod Safe — ${margin}% margin (Pcr = ${Pcr_kN.toFixed(2)} kN)`;
     statusDiv.className = 'safety-status safety-safe';
   } else if (Pcr > 1.5 * loadN) {
-    statusDiv.textContent = `Rod Warning — ${margin}% margin`;
+    statusDiv.textContent = `Rod Warning — ${margin}% margin (Pcr = ${Pcr_kN.toFixed(2)} kN)`;
     statusDiv.className = 'safety-status safety-warning';
   } else {
-    statusDiv.textContent = `Rod Not Safe — ${margin}% margin`;
+    statusDiv.textContent = `Rod Not Safe — ${margin}% margin (Pcr = ${Pcr_kN.toFixed(2)} kN)`;
     statusDiv.className = 'safety-status safety-unsafe';
   }
 }
 
-// run whenever modal or related inputs change
-['rodSafetyStroke','rodEndCondition','isoRod'].forEach(id=>{
-  const el=document.getElementById(id);
-  if(el) el.addEventListener('input', computeRodSafety);
+// re-run whenever related values change
+['rodSafetyStroke', 'rodEndCondition', 'isoRod'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', computeRodSafety);
 });
-const calcNode=document.getElementById('calcPerCyl');
-if(calcNode){
-  const mo=new MutationObserver(()=>computeRodSafety());
-  mo.observe(calcNode,{childList:true,subtree:true});
+
+// observe load changes
+const calcNode = document.getElementById('calcPerCyl');
+if (calcNode) {
+  const mo = new MutationObserver(() => computeRodSafety());
+  mo.observe(calcNode, { childList: true, subtree: true });
 }
-// also trigger when modal opens
-document.getElementById('findBtn')?.addEventListener('click',()=>{
-  setTimeout(computeRodSafety,200);
+
+// ensure compute runs when modal opens
+document.getElementById('findBtn')?.addEventListener('click', () => {
+  setTimeout(computeRodSafety, 200);
 });
 
       // calc per-cylinder load from modal output (e.g. "12.34 kN")
