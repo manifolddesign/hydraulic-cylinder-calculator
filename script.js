@@ -244,24 +244,64 @@ document.addEventListener('DOMContentLoaded', () => {
     if($('boreDia')) $('boreDia').value = b.toFixed(2); if($('rodDia')) $('rodDia').value = r.toFixed(2);
     computeAll(); findOverlay.style.display='none';
   });
+// ---------------- Rod Safety (Euler buckling) ----------------
+const E_mod = 2.1e5; // N/mm²
 
+function computeRodSafety() {
+  const statusDiv = document.getElementById('rodSafetyStatus');
+  if (!statusDiv) return;
 
-  // ---------------- Rod Safety (Euler buckling) ----------------
-  const E_mod = 2.1e5; // N/mm2 (Young's modulus)
-  function computeRodSafety(){
-    const statusDiv = document.getElementById('rodSafetyStatus');
-    try{
-      const strokeInput = document.getElementById('rodSafetyStroke');
-      const endCond = document.getElementById('rodEndCondition');
-      const isoRodSel = document.getElementById('isoRod');
-      const perCylText = document.getElementById('calcPerCyl');
-      if(!statusDiv || !strokeInput || !endCond || !isoRodSel || !perCylText){
-        if(statusDiv) { statusDiv.textContent='--'; statusDiv.className='safety-status'; }
-        return;
-      }
-      const L = parseFloat(strokeInput.value) || 0;
-      const K = parseFloat(endCond.value) || 1.0;
-      const d = parseFloat(isoRodSel.value) || 0; // mm
+  const strokeInput = document.getElementById('rodSafetyStroke');
+  const endCond = document.getElementById('rodEndCondition');
+  const isoRodSel = document.getElementById('isoRod');
+  const perCylText = document.getElementById('calcPerCyl');
+
+  const L = parseFloat(strokeInput?.value) || 0;
+  const K = parseFloat(endCond?.value) || 1.0;
+  const d = parseFloat(isoRodSel?.value) || 0;
+  const perText = perCylText?.textContent || '';
+  const load_kN = parseFloat(perText.replace(/[^\d.\-]/g, '')) || 0;
+  const loadN = load_kN * 1000;
+
+  // warn if incomplete
+  if (!L || !d || !loadN) {
+    statusDiv.textContent = '⚠️ Enter stroke length to check safety';
+    statusDiv.className = 'safety-status safety-warning';
+    return;
+  }
+
+  // Euler buckling
+  const I = (Math.PI * Math.pow(d, 4)) / 64;
+  const Pcr = (Math.pow(Math.PI, 2) * E_mod * I) / Math.pow(K * L, 2);
+  const margin = ((Pcr / loadN - 1) * 100).toFixed(1);
+
+  if (Pcr > 2 * loadN) {
+    statusDiv.textContent = `Rod Safe — ${margin}% margin`;
+    statusDiv.className = 'safety-status safety-safe';
+  } else if (Pcr > 1.5 * loadN) {
+    statusDiv.textContent = `Rod Warning — ${margin}% margin`;
+    statusDiv.className = 'safety-status safety-warning';
+  } else {
+    statusDiv.textContent = `Rod Not Safe — ${margin}% margin`;
+    statusDiv.className = 'safety-status safety-unsafe';
+  }
+}
+
+// run whenever modal or related inputs change
+['rodSafetyStroke','rodEndCondition','isoRod'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('input', computeRodSafety);
+});
+const calcNode=document.getElementById('calcPerCyl');
+if(calcNode){
+  const mo=new MutationObserver(()=>computeRodSafety());
+  mo.observe(calcNode,{childList:true,subtree:true});
+}
+// also trigger when modal opens
+document.getElementById('findBtn')?.addEventListener('click',()=>{
+  setTimeout(computeRodSafety,200);
+});
+
       // calc per-cylinder load from modal output (e.g. "12.34 kN")
       const perText = perCylText.textContent || '';
       const perVal = parseFloat(perText.replace(/[^\d\.\-]/g,'')) || 0; // kN
