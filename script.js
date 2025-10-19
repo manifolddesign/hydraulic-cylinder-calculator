@@ -1,6 +1,7 @@
 
 /* script v1.2.0 - implements calculations, find modal, export, login */
 const DEFAULT_PWD = 'Hydra';
+if (v.toLowerCase() === DEFAULT_PWD.toLowerCase()) {
 document.addEventListener('DOMContentLoaded', () => {
   const $ = id => document.getElementById(id);
 
