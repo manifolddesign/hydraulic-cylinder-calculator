@@ -13,7 +13,30 @@ document.addEventListener('DOMContentLoaded', () => {
     if(v === DEFAULT_PWD){ pwdError.textContent = 'Unlocked successfully.'; pwdOverlay.style.display='none'; topbar.style.display='flex'; app.style.display='block'; computeAll(); }
     else { pwdError.textContent = 'Incorrect password — please try again.'; pwdInput.focus(); }
   });
+// Find Cylinder Size Modal
+const findOverlay = document.getElementById('findModalOverlay');
+const findBtn = document.getElementById('findBtn');
+const closeFind = document.getElementById('closeFind');
 
+if (findBtn && findOverlay) {
+  findBtn.addEventListener('click', () => {
+    findOverlay.style.display = 'flex';
+  });
+}
+
+if (closeFind && findOverlay) {
+  closeFind.addEventListener('click', () => {
+    findOverlay.style.display = 'none';
+  });
+}
+
+// Prevent closing when clicking outside
+findOverlay.addEventListener('click', (e) => {
+  if (e.target === findOverlay) {
+    // do nothing — modal stays open
+    e.stopPropagation();
+  }
+});
   // helpers
   function area_mm2(d){ return Math.PI*Math.pow(d/2,2); }
   function mm_from_area(a){ return Math.sqrt((4*a)/Math.PI); }
