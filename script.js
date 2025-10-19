@@ -1,45 +1,58 @@
 const DEFAULT_PWD = 'Hydra';
-document.addEventListener('DOMContentLoaded', () => {
-  const overlay = document.getElementById('pwdOverlay');
-  document.getElementById('pwdBtn').addEventListener('click', ()=>{
+document.addEventListener('DOMContentLoaded', ()=>{
+  const overlay=document.getElementById('pwdOverlay');
+  const app=document.getElementById('app');
+  document.getElementById('pwdBtn').addEventListener('click',()=>{
     if(document.getElementById('pwdInput').value===DEFAULT_PWD){
-      overlay.style.display='none';
-      document.getElementById('app').style.display='block';
-    }else{
-      alert('Incorrect password');
-    }
+      overlay.style.display='none';app.style.display='block';
+    }else alert('Incorrect password');
   });
 
-  document.getElementById('exportBtn').addEventListener('click', ()=>{
-    const ws_data = [
-      ["S.No","Cylinder Name","Bore","Rod","Stroke","Qty","Total Bore Flow","Total Rod Flow","Bore Power","Rod Power","Unit"],
-      ["","","mm","mm","mm","","L/min","L/min","kW","kW",""]
-    ];
-    const bore = parseFloat(document.getElementById('boreDia').value)||0;
-    const rod = parseFloat(document.getElementById('rodDia').value)||0;
-    const stroke = parseFloat(document.getElementById('stroke').value)||0;
-    const qty = parseInt(document.getElementById('nCyl').value)||1;
-    const boreFlow = (bore*stroke/10000).toFixed(2);
-    const rodFlow = (rod*stroke/10000).toFixed(2);
-    const borePower = (boreFlow*2).toFixed(2);
-    const rodPower = (rodFlow*2).toFixed(2);
-    ws_data.push([1,"Cylinder 1",bore,rod,stroke,qty,boreFlow,rodFlow,borePower,rodPower,""]);
+  const savedCyls=[];
+  function renderList(){
+    const tbody=document.querySelector('#savedList tbody');
+    tbody.innerHTML='';
+    savedCyls.forEach((cyl,idx)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td><input type='checkbox' class='cylSelect' data-index='${idx}' checked></td>
+                    <td>${cyl.name}</td>
+                    <td>${cyl.bore} × ${cyl.rod} × ${cyl.stroke} mm</td>`;
+      tbody.appendChild(tr);
+    });
+  }
 
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(ws_data);
-    ws['!freeze'] = {xSplit: 0, ySplit: 2};
-    ws['!cols'] = [
-      {wch:6},{wch:20},{wch:10},{wch:10},{wch:10},{wch:8},
-      {wch:18},{wch:18},{wch:14},{wch:14},{wch:10}
-    ];
-    XLSX.utils.book_append_sheet(wb, ws, "Cylinders");
-    XLSX.writeFile(wb, "Selected_Cylinders_v1.3.2.xlsx");
+  document.getElementById('addBtn').addEventListener('click',()=>{
+    const name=document.getElementById('cylName').value.trim()||'Untitled';
+    const bore=document.getElementById('boreDia').value;
+    const rod=document.getElementById('rodDia').value;
+    const stroke=document.getElementById('stroke').value;
+    const nCyl=document.getElementById('nCyl').value;
+    const powerB=document.getElementById('finalBore').textContent;
+    const powerR=document.getElementById('finalRod').textContent;
+    const flowB=document.getElementById('flowBtot').textContent;
+    const flowR=document.getElementById('flowRtot').textContent;
+    if(!bore||!rod||!stroke){alert('Please fill all dimensions first!');return;}
+    savedCyls.push({name,bore,rod,stroke,nCyl,powerB,powerR,flowB,flowR});
+    renderList();
+    alert(`✅ ${name} added successfully!`);
   });
 
-  document.getElementById('resetBtn').addEventListener('click', ()=>{
-    document.getElementById('boreDia').value = 320;
-    document.getElementById('rodDia').value = 220;
-    document.getElementById('stroke').value = 1500;
-    document.getElementById('nCyl').value = 1;
+  document.getElementById('exportBtn').addEventListener('click',()=>{
+    const selected=Array.from(document.querySelectorAll('.cylSelect'))
+      .filter(chk=>chk.checked).map(chk=>savedCyls[chk.dataset.index]);
+    if(selected.length===0){alert('Select at least one cylinder!');return;}
+    const ws_data=[['Name','Bore(mm)','Rod(mm)','Stroke(mm)','No.','Bore Power','Rod Power','Total Bore Flow','Total Rod Flow']];
+    selected.forEach(c=>ws_data.push([c.name,c.bore,c.rod,c.stroke,c.nCyl,c.powerB,c.powerR,c.flowB,c.flowR]));
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.aoa_to_sheet(ws_data);
+    XLSX.utils.book_append_sheet(wb,ws,'Selected Cylinders');
+    XLSX.writeFile(wb,'Selected_Cylinders.xlsx');
+  });
+
+  document.getElementById('resetBtn').addEventListener('click',()=>{
+    document.querySelectorAll('input[type=number],input[type=text],input[type=password]').forEach(i=>i.value='');
+    document.querySelectorAll('select').forEach(s=>s.selectedIndex=0);
+    document.getElementById('regen').checked=false;
+    document.querySelectorAll('.output').forEach(o=>o.textContent='--');
   });
 });
