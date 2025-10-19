@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Hydraulic Cylinder Calculation — v1.2.0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hydraulic Cylinder Calculation — v1.3.1</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,12 +11,12 @@
   <div id="pwdOverlay" class="overlay">
     <div class="modal">
       <h2>Enter Password</h2>
-      <input id="pwdInput" type="password" placeholder="Enter password">
-      <div class="modal-actions">
+      <div style="display:flex;gap:8px;align-items:center;justify-content:center;width:100%">
+        <input id="pwdInput" type="password" placeholder="Enter password" style="flex:1;padding:10px;border-radius:8px;border:1px solid #e6eef8">
         <button id="pwdBtn" class="btn">Unlock</button>
       </div>
       <p id="pwdError" class="muted"></p>
-      <div class="ver">Version: v1.2.0</div>
+      <div class="ver">Version: v1.3.1</div>
     </div>
   </div>
 
@@ -112,7 +112,7 @@
 
   <!-- Find Cylinder Size Modal -->
   <div id="findModalOverlay" class="overlay" style="display:none">
-    <div class="modal large">
+    <div class="modal large" role="dialog" aria-modal="true">
       <h2>Find Cylinder Size</h2>
 
       <div class="grid-2">
@@ -127,19 +127,22 @@
 
       <div class="grid-2">
         <div class="field"><label>No. of Cylinders</label><input id="inputQty" type="number" min="1" value="1" placeholder="Enter number"></div>
-        <div class="field"><label>All cylinders hold entered weight</label><label class="switch"><input id="inputEqual" type="checkbox" checked><span class="slider"></span></label></div>
+        <div class="field"><label>All cylinders hold entered weight</label><label class="switch"><input id="inputEqual" type="checkbox"><span class="slider"></span></label></div>
       </div>
 
       <div class="grid-2">
         <div class="field"><label>Pressure (bar, optional)</label><input id="inputPressure" type="number" step="0.1" placeholder="Enter pressure"></div>
-        <div class="field"><label>ISO Bore Size</label><select id="isoBore"></select></div>
+        <div class="field"><label>Safety Factor (Bore)</label><select id="sfBore"><option value="1.1">1.10</option><option value="1.25" selected>1.25</option><option value="1.5">1.50</option></select></div>
       </div>
 
-      <div class="field"><label>Rod Type</label><select id="rodType"><option value="light">Light — 30% of bore</option><option value="standard" selected>Standard — 40% of bore</option><option value="heavy">Heavy — 50% of bore</option></select></div>
+      <div class="grid-2">
+        <div class="field"><label>Rod Type</label><select id="rodType"><option value="light">Light — 60% of bore</option><option value="standard" selected>Standard — 70% of bore</option><option value="heavy">Heavy — 80% of bore</option></select></div>
+        <div class="field"><label>Stroke (mm)</label><input id="inputStroke" type="number" step="1" placeholder="Enter stroke for buckling check"></div>
+      </div>
 
       <div class="grid-2">
-        <div class="field"><label>Rod ISO Recommendation</label><select id="isoRod"></select></div>
-        <div class="field"><label>&nbsp;</label><button id="clearFind" class="btn">Clear</button></div>
+        <div class="field"><label>End Condition</label><select id="endCond"><option value="0.5">Fixed - Fixed (K=0.5)</option><option value="0.7">Fixed - Pinned (K=0.7)</option><option value="1.0" selected>Pinned - Pinned (K=1.0)</option><option value="2.0">Cantilever (K=2.0)</option></select></div>
+        <div class="field"><label>Material Yield (MPa)</label><input id="matYield" type="number" value="400" step="1"></div>
       </div>
 
       <div class="results modal-results">
@@ -149,7 +152,21 @@
         <div class="res"><div class="label">Nearest ISO bore</div><div id="calcIso" class="value output">--</div></div>
       </div>
 
+      <!-- Rod safety factor check inside modal -->
+      <div style="margin-top:12px;border-top:1px solid #eef5fb;padding-top:12px">
+        <h3 style="margin:0 0 8px 0">Rod Safety Factor Check (Buckling)</h3>
+        <div class="grid-2">
+          <div class="field"><label>Buckling Safety Factor target</label><input id="buckSF" type="number" value="2.0" step="0.1"></div>
+          <div class="field"><label>&nbsp;</label><select id="dummy"></select></div>
+        </div>
+        <div class="grid-2">
+          <div class="field"><label>Result</label><div id="rodSFResult" class="value output">--</div></div>
+          <div class="field" style="display:flex;align-items:flex-end;justify-content:flex-end"><button id="checkRodSF" class="btn">Check Rod Safety Factor</button></div>
+        </div>
+      </div>
+
       <div class="modal-actions-row">
+        <button id="calcFind" class="btn">Calculate</button>
         <button id="applyFind" class="btn">Apply</button>
         <button id="resetFind" class="btn">Reset</button>
         <button id="closeFind" class="btn">Close</button>
