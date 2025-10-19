@@ -1,48 +1,34 @@
 /* ==========================================================
    Hydraulic Cylinder Calculator - v1.3.3 FINAL STABLE
    © Design Hydraulics 2025 — All Rights Reserved
-   ==========================================================
-   ✅ Login Password: Hydra@2025
-   ✅ Modal: stays open, no clear button, rod safety check
-   ✅ All Cylinders Hold Weight logic fixed
-   ✅ Exports into "Hydraulic Cylinder Reports.xlsx"
-   ✅ Uses sheet: "Hydraulic_Cylinders"
-   ✅ Mobile + Desktop supported
    ========================================================== */
 
 const LOGIN_PASSWORD = "Hydra@2025";
 const APP_VERSION = "v1.3.3";
 
 // ---------------- LOGIN ----------------
-const loginContainer =
-  document.getElementById("loginContainer") ||
-  document.querySelector("#loginDiv, #login, .login");
-const mainApp =
-  document.getElementById("mainApp") ||
-  document.querySelector("#hydraulicMain, #appMain, .mainApp");
+const loginContainer = document.getElementById("loginContainer");
+const mainApp = document.getElementById("mainApp");
 const unlockBtn = document.getElementById("unlockBtn");
 const pwdInput = document.getElementById("passwordInput");
 const loginError = document.getElementById("loginError");
 
-if (unlockBtn) {
-  unlockBtn.addEventListener("click", () => {
-    const entered = (pwdInput?.value || "").trim();
-    if (entered === LOGIN_PASSWORD) {
-      if (loginContainer) loginContainer.style.display = "none";
-      if (mainApp) mainApp.style.display = "block";
-      if (loginError) loginError.textContent = "";
-    } else {
-      if (loginError)
-        loginError.textContent = "Incorrect password. Please try again.";
-    }
-  });
-}
+unlockBtn?.addEventListener("click", () => {
+  const val = (pwdInput?.value || "").trim();
+  if (val === LOGIN_PASSWORD) {
+    loginContainer.style.display = "none";
+    mainApp.style.display = "block";
+    loginError.textContent = "";
+  } else {
+    loginError.textContent = "Incorrect password. Please try again.";
+  }
+});
 
 // ---------------- UTILITIES ----------------
 const toNum = v => (isNaN(Number(v)) ? 0 : Number(v));
 const round = (v, d = 2) => Number(v.toFixed(d));
 
-// ---------------- CYLINDER TABLE ----------------
+// ---------------- TABLE ----------------
 const tbody = document.querySelector("#cylinderTable tbody");
 let index = 0;
 
@@ -75,8 +61,7 @@ document.getElementById("addCylinderBtn")?.addEventListener("click", () => {
 });
 
 document.getElementById("selectAllCheckbox")?.addEventListener("change", e => {
-  document
-    .querySelectorAll(".rowSelect")
+  document.querySelectorAll(".rowSelect")
     .forEach(chk => (chk.checked = e.target.checked));
 });
 
@@ -123,8 +108,7 @@ applyFindBtn?.addEventListener("click", () => {
 
   let totalLoadN = 0;
   if (weightVal > 0)
-    totalLoadN =
-      weightUnit === "kg" ? weightVal * 9.81 : weightVal * 1000 * 9.81;
+    totalLoadN = weightUnit === "kg" ? weightVal * 9.81 : weightVal * 1000 * 9.81;
 
   let perCylLoad = allHold && noCyl > 1 ? totalLoadN / noCyl : totalLoadN;
   if (!perCylLoad && capacityVal > 0) perCylLoad = capacityVal * 1000;
@@ -134,7 +118,7 @@ applyFindBtn?.addEventListener("click", () => {
     const A_mm2 = (perCylLoad * 1e6) / (pressureVal * 1e5);
     boreDia = Math.sqrt((4 * A_mm2) / Math.PI);
   } else {
-    const sigma = 20; // N/mm² assumption
+    const sigma = 20;
     const A_mm2 = perCylLoad / sigma;
     boreDia = Math.sqrt((4 * A_mm2) / Math.PI);
   }
@@ -162,112 +146,12 @@ applyFindBtn?.addEventListener("click", () => {
   `;
 
   const selected = document.querySelectorAll(".rowSelect:checked");
-  const targets =
-    selected.length > 0
-      ? Array.from(selected).map(c => c.closest("tr"))
-      : [tbody.querySelector("tr")];
+  const targets = selected.length > 0
+    ? Array.from(selected).map(c => c.closest("tr"))
+    : [tbody.querySelector("tr")];
   targets.forEach(r => {
     r.querySelector(".bore").value = isoBore;
     r.querySelector(".rod").value = isoRod;
     if (strokeVal) r.querySelector(".stroke").value = strokeVal;
   });
 });
-
-// ---------------- EXPORT TO EXCEL (TEMPLATE) ----------------
-document.getElementById("exportBtn")?.addEventListener("click", async () => {
-  try {
-    if (typeof XLSX === "undefined") return fallbackCsvExport();
-
-    const tpl = await fetch("Hydraulic Cylinder Reports.xlsx");
-    const buf = await tpl.arrayBuffer();
-    const wb = XLSX.read(buf, { type: "array" });
-    const ws = wb.Sheets["Hydraulic_Cylinders"];
-
-    const set = (r, c, v) => {
-      const ref = XLSX.utils.encode_cell({ r, c });
-      ws[ref] = { v, t: typeof v === "number" ? "n" : "s" };
-    };
-
-    const rows = Array.from(document.querySelectorAll("#cylinderTable tbody tr"));
-    if (!rows.length) return alert("No cylinders to export.");
-    const startCol = 2;
-    let totalBoreFlow = 0, totalRodFlow = 0, totalBorePower = 0, totalRodPower = 0;
-
-    rows.forEach((r, i) => {
-      const col = startCol + i;
-      const name = r.querySelector(".cName").value || `C${i + 1}`;
-      const bore = toNum(r.querySelector(".bore").value);
-      const rod = toNum(r.querySelector(".rod").value);
-      const stroke = toNum(r.querySelector(".stroke").value);
-      const timeVal = toNum(r.querySelector(".timeVal").value);
-      const pressVal = toNum(r.querySelector(".pressVal").value);
-
-      const areaBore = Math.PI * (bore / 2) ** 2;
-      const volL = (areaBore * stroke) / 1e6;
-      const boreFlow = timeVal ? volL / (timeVal / 60) : 0;
-      const rodArea = Math.PI * (rod / 2) ** 2;
-      const rodVol = ((areaBore - rodArea) * stroke) / 1e6;
-      const rodFlow = timeVal ? rodVol / (timeVal / 60) : 0;
-
-      const boreForce = pressVal ? pressVal * 1e5 * (areaBore / 1e6) : 0;
-      const rodForce = pressVal ? pressVal * 1e5 * ((areaBore - rodArea) / 1e6) : 0;
-      const borePower = (pressVal * boreFlow) / 600;
-      const rodPower = (pressVal * rodFlow) / 600;
-
-      totalBoreFlow += boreFlow;
-      totalRodFlow += rodFlow;
-      totalBorePower += borePower;
-      totalRodPower += rodPower;
-
-      set(1, col, name);
-      set(2, col, round(bore,2));
-      set(3, col, round(rod,2));
-      set(4, col, round(stroke,2));
-      set(5, col, round(boreFlow,3));
-      set(6, col, round(rodFlow,3));
-      set(7, col, round(boreForce,1));
-      set(8, col, round(rodForce,1));
-      set(9, col, pressVal);
-      set(10, col, pressVal);
-      set(15, col, "No"); // Regeneration flag
-    });
-
-    set(13, 2, round(totalBoreFlow,3));
-    set(14, 2, round(totalRodFlow,3));
-    set(16, 2, round(totalBorePower,3));
-    set(17, 2, round(totalRodPower,3));
-
-    XLSX.writeFile(wb, "Hydraulic_Cylinder_Report_v1.3.3.xlsx");
-    alert("Excel exported successfully.");
-  } catch (e) {
-    console.error(e);
-    fallbackCsvExport();
-  }
-});
-
-// ---------------- CSV FALLBACK ----------------
-function fallbackCsvExport() {
-  const rows = Array.from(document.querySelectorAll("#cylinderTable tbody tr"));
-  if (!rows.length) return alert("No cylinders to export.");
-  const data = rows.map((r, i) => ({
-    Name: r.querySelector(".cName").value || `C${i + 1}`,
-    Bore: toNum(r.querySelector(".bore").value),
-    Rod: toNum(r.querySelector(".rod").value),
-    Stroke: toNum(r.querySelector(".stroke").value),
-    Time: toNum(r.querySelector(".timeVal").value),
-    Pressure: toNum(r.querySelector(".pressVal").value)
-  }));
-  const keys = Object.keys(data[0]);
-  const csv = [
-    keys.join(","),
-    ...data.map(r => keys.map(k => r[k]).join(","))
-  ].join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "Hydraulic_Cylinder_Report_v1.3.3.csv";
-  a.click();
-}
-
-// ---------------- FOOTER ----------------
-document.querySelectorAll("footer .version").forEach(v => (v.textContent = APP_VERSION));
