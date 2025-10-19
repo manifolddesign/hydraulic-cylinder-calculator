@@ -14,22 +14,29 @@ const LOGIN_PASSWORD = "Hydra@2025";
 const APP_VERSION = "v1.3.3";
 
 // ---------------- LOGIN ----------------
-const loginContainer = document.getElementById("loginContainer");
-const mainApp = document.getElementById("mainApp");
+const loginContainer =
+  document.getElementById("loginContainer") ||
+  document.querySelector("#loginDiv, #login, .login");
+const mainApp =
+  document.getElementById("mainApp") ||
+  document.querySelector("#hydraulicMain, #appMain, .mainApp");
 const unlockBtn = document.getElementById("unlockBtn");
 const pwdInput = document.getElementById("passwordInput");
 const loginError = document.getElementById("loginError");
 
-unlockBtn?.addEventListener("click", () => {
-  const val = (pwdInput?.value || "").trim();
-  if (val === LOGIN_PASSWORD) {
-    loginContainer.style.display = "none";
-    mainApp.style.display = "block";
-    loginError.textContent = "";
-  } else {
-    loginError.textContent = "Incorrect password. Please try again.";
-  }
-});
+if (unlockBtn) {
+  unlockBtn.addEventListener("click", () => {
+    const entered = (pwdInput?.value || "").trim();
+    if (entered === LOGIN_PASSWORD) {
+      if (loginContainer) loginContainer.style.display = "none";
+      if (mainApp) mainApp.style.display = "block";
+      if (loginError) loginError.textContent = "";
+    } else {
+      if (loginError)
+        loginError.textContent = "Incorrect password. Please try again.";
+    }
+  });
+}
 
 // ---------------- UTILITIES ----------------
 const toNum = v => (isNaN(Number(v)) ? 0 : Number(v));
@@ -222,7 +229,7 @@ document.getElementById("exportBtn")?.addEventListener("click", async () => {
       set(8, col, round(rodForce,1));
       set(9, col, pressVal);
       set(10, col, pressVal);
-      set(15, col, "No"); // Regeneration flag default
+      set(15, col, "No"); // Regeneration flag
     });
 
     set(13, 2, round(totalBoreFlow,3));
