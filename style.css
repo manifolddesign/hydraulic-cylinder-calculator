@@ -1,3 +1,4 @@
+
 :root{--accent:#1e88e5;--muted:#64748b;--highlight:#e3f2fd}
 *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0}
 html{font-size:16px}
@@ -93,11 +94,14 @@ input[type=number],select,input[type=text]{padding:12px;border-radius:10px;borde
   color: #b71c1c;
   border-color: #ef5350;
 }
+
+
 .safety-warning {
   background: #fff4e5;
   color: #7a4f01;
   border-color: #ffcc80;
 }
+
 
 /* Center footer */
 footer { 
@@ -106,10 +110,3 @@ footer {
   display: flex; 
   align-items: center; 
 }
-
-/* ===== Login overlay (login-modal only) ===== */
-.login-modal { width:320px; padding:28px; border-radius:10px; }
-.password-row { display:flex; gap:0; align-items:center; margin-top:12px; }
-#pwdInput { flex:1; height:44px; border:1px solid #e6eef8; border-radius:8px 0 0 8px; padding:0 12px; font-size:16px; }
-#loginBtn { height:44px; background:var(--accent); color:#fff; border-radius:0 8px 8px 0; border:0; padding:0 16px; cursor:pointer; font-weight:700; }
-#loginBtn:hover { filter:brightness(.92); }
