@@ -3,20 +3,20 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Hydraulic Cylinder Calculation — v1.3.2</title>
+<title>Hydraulic Cylinder Calculation — v1.3.3</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Password Modal -->
-  <div id="pwdOverlay" class="overlay">
-    <div class="modal">
+  <!-- Password Modal (login overlay) -->
+  <div id="overlay" class="overlay">
+    <div class="modal login-modal">
       <h2>Enter Password</h2>
-      <input id="pwdInput" type="password" placeholder="Enter password">
-      <div class="modal-actions">
-        <button id="pwdBtn" class="btn">Unlock</button>
+      <div class="password-row">
+        <input id="pwdInput" type="password" placeholder="Enter password">
+        <button id="loginBtn" class="btn">Unlock</button>
       </div>
       <p id="pwdError" class="muted"></p>
-      <div class="ver">Version: v1.3.2</div>
+      <div class="ver">Version: v1.3.3</div>
     </div>
   </div>
 
@@ -154,7 +154,6 @@
       </div>
       <div class="field"><label>Rod Safety Status</label><div id="rodSafetyStatus" class="safety-status">--</div></div>
       <div class="grid-2">
-
         <div class="field"><label>&nbsp;</label></div>
       </div>
 
