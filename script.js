@@ -1,30 +1,20 @@
+
+/* script v1.2.0 - implements calculations, find modal, export, login */
+const DEFAULT_PWD = 'Hydraulics@2025';
 document.addEventListener('DOMContentLoaded', () => {
-  const $ = (id) => document.getElementById(id);
+  const $ = id => document.getElementById(id);
 
-  // ===== LOGIN =====
-  const pwdInput = $('pwdInput');
-  const loginBtn = $('loginBtn');
-  const overlay = $('overlay');
-  const topbar = $('topbar');
-  const app = $('app');
-  const DEFAULT_PWD = 'Hydra';
+  // login
+  const pwdOverlay = $('pwdOverlay'), pwdInput = $('pwdInput'), pwdBtn = $('pwdBtn'), pwdError = $('pwdError');
+  const topbar = $('topbar'), app = $('app');
+  pwdBtn.addEventListener('click', ()=>{
+    const v = (pwdInput.value||'').trim();
+    if(!v){ pwdError.textContent = 'Please enter password.'; return; }
+    if(v === DEFAULT_PWD){ pwdError.textContent = 'Unlocked successfully.'; pwdOverlay.style.display='none'; topbar.style.display='flex'; app.style.display='block'; computeAll(); }
+    else { pwdError.textContent = 'Incorrect password — please try again.'; pwdInput.focus(); }
+  });
 
-  if (loginBtn) {
-    loginBtn.addEventListener('click', () => {
-      const v = (pwdInput && pwdInput.value || '').trim();
-      if (v.toLowerCase() === DEFAULT_PWD.toLowerCase()) {
-        // hide overlay, show app
-        if (overlay) overlay.style.display = 'none';
-        if (topbar) topbar.style.display = 'flex';
-        if (app) app.style.display = 'block';
-      } else {
-        if (pwdInput) pwdInput.value = '';
-        alert('Incorrect password');
-      }
-    });
-  }
-
-  // ----- helpers -----
+  // helpers
   function area_mm2(d){ return Math.PI*Math.pow(d/2,2); }
   function mm_from_area(a){ return Math.sqrt((4*a)/Math.PI); }
   function fmt(v, p=2){ return (isNaN(v)||v==='' ? '--' : Number(v).toFixed(p)); }
@@ -143,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const selectAllHeader = $('selectAllHeader'); if(selectAllHeader) selectAllHeader.addEventListener('change', (e)=>{ const checks=document.querySelectorAll('.cylSelect'); checks.forEach(c=> c.checked=selectAllHeader.checked); });
   document.addEventListener('change', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('cylSelect')){ const checks=document.querySelectorAll('.cylSelect'); const allChecked=checks.length>0 && Array.from(checks).every(c=>c.checked); if(selectAllHeader) selectAllHeader.checked=allChecked; } });
 
-  // export to excel
+  // export to excel - columns per user request, flows in L/min
   if($('exportBtn')) $('exportBtn').addEventListener('click', ()=>{
     const header=['Name','No. of Cylinders','Bore Dia (mm)','Rod Dia (mm)','Stroke (mm)','Time Option (Bore)','Time Value (Bore)','Time Option (Rod)','Time Value (Rod)','Pressure/Force Option (Bore)','Force Value (Bore) kN','Pressure (Bore) bar','Pressure/Force Option (Rod)','Force Value (Rod) kN','Pressure (Rod) bar','Total Flow (Bore) L/min','Total Flow (Rod) L/min','Total Power (Bore) kW','Total Power (Rod) kW','Bore Area mm2','Rod Area mm2'];
     const rows=[header];
@@ -181,10 +171,10 @@ document.addEventListener('DOMContentLoaded', () => {
     checks.forEach(ch => { if(ch.checked){ const idx = parseInt(ch.dataset.index); const c = savedCyls[idx]; if(c){ rows.push(computeRow(c)); if(c.name) addedNames.add(c.name); } } });
     const current = {name: $('cylName')? $('cylName').value.trim() : '', bore: $('boreDia')? $('boreDia').value : '', rod: $('rodDia')? $('rodDia').value : '', stroke: $('stroke')? $('stroke').value : '', nCyl: $('nCyl')? $('nCyl').value : 1};
     if((current.bore || current.rod || current.stroke) && !addedNames.has(current.name || '')) rows.push(computeRow(current));
-    const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(rows); XLSX.utils.book_append_sheet(wb, ws, 'Cylinder_Results'); XLSX.writeFile(wb, 'Hydraulic_Cylinder_Results_v1.3.3.xlsx');
+    const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(rows); XLSX.utils.book_append_sheet(wb, ws, 'Cylinder_Results'); XLSX.writeFile(wb, 'Hydraulic_Cylinder_Results_v1.3.1.xlsx');
   });
 
-  // Find modal logic
+  // Find modal logic - corrected 'all cylinders hold' behavior
   const findOverlay = $('findModalOverlay'); const findBtn = $('findBtn'); const closeFind = $('closeFind'); const applyFind = $('applyFind');
   const isoSelect = $('isoBore'); const isoRod = $('isoRod'); const clearFind = $('clearFind'); const resetFind = $('resetFind');
 
@@ -211,12 +201,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if(cap>0){ $('inputQty').disabled=true; $('inputEqual').disabled=true; } else { $('inputQty').disabled=false; $('inputEqual').disabled=false; }
 
+    // Behavior corrected:
+    // If capacity provided -> perCyl = total_kN (capacity is per cyl or total? we treat capacity as total)
+    // If weight provided and 'All cylinders hold' CHECKED -> load divided among cylinders
+    // If weight provided and unchecked -> each cylinder must hold full entered weight
     let perCyl_kN = total_kN;
-    if(cap>0) perCyl_kN = total_kN;
-    else {
+    if(cap>0){
+      // capacity is treated as total required force (user may use per-cyl too)
+      perCyl_kN = total_kN;
+    } else {
       if(qty===1) perCyl_kN = total_kN;
-      else if(equal) perCyl_kN = total_kN;
-      else perCyl_kN = total_kN / Math.max(qty,1);
+      else if(equal) perCyl_kN = total_kN / Math.max(qty,1);
+      else perCyl_kN = total_kN;
     }
     $('calcPerCyl').textContent = fmt(perCyl_kN) + ' kN';
     let result = pressure>0? computeFromPressure(perCyl_kN, pressure, rodRatio) : computeFromNoPressure(perCyl_kN, rodRatio);
@@ -237,76 +233,51 @@ document.addEventListener('DOMContentLoaded', () => {
   isoSelect.addEventListener('input', ()=>{ const b=parseFloat(isoSelect.value)||0; if(b>0){ $('calcIso').textContent = b + ' mm'; const lightRod = Math.round((b*0.3)/5)*5; const standardRod = Math.round((b*0.4)/5)*5; const heavyRod = Math.round((b*0.5)/5)*5; $('calcRod').textContent = 'Light: '+lightRod+' mm • Std: '+standardRod+' mm • Heavy: '+heavyRod+' mm'; const nearestRod = nearestIso(ISO_RODS, standardRod); isoRod.value = nearestRod; findOverlay.dataset.bore = b; findOverlay.dataset.rod = nearestRod; } });
   isoRod.addEventListener('input', ()=>{ findOverlay.dataset.rod = parseFloat(isoRod.value)||0; });
 
-  if(document.getElementById('clearFind')) document.getElementById('clearFind').addEventListener('click', ()=>{ ['inputWeight','inputCapacity','inputQty','inputPressure'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; }); $('weightUnit').selectedIndex=0; $('capUnit').selectedIndex=0; $('inputQty').value=1; $('inputEqual').checked=true; $('rodType').selectedIndex=1; isoSelect.selectedIndex=0; isoRod.selectedIndex=0; ['calcPerCyl','calcBore','calcRod','calcIso'].forEach(id=>document.getElementById(id).textContent='--'); delete findOverlay.dataset.bore; delete findOverlay.dataset.rod; $('inputQty').disabled=false; $('inputEqual').disabled=false; });
 
-  if(resetFind) resetFind.addEventListener('click', ()=>{ if(document.getElementById('clearFind')) document.getElementById('clearFind').click(); });
-  if(findBtn) findBtn.addEventListener('click', ()=>{ findOverlay.style.display='flex'; updateFindCalc(); computeRodSafety(); });
-  if(closeFind) closeFind.addEventListener('click', ()=>{ findOverlay.style.display='none'; });
-  if(findOverlay) findOverlay.addEventListener('click', (e)=>{ if(e.target===findOverlay) findOverlay.style.display='none'; });
 
-  if(applyFind) applyFind.addEventListener('click', ()=>{
+  if(resetFind) resetFind.addEventListener('click', ()=>{ ['inputWeight','inputCapacity','inputQty','inputPressure','inputStroke'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; }); $('weightUnit').selectedIndex=0; $('capUnit').selectedIndex=0; $('inputQty').value=1; $('inputEqual').checked=false; $('rodType').selectedIndex=1; isoSelect.selectedIndex=0; isoRod.selectedIndex=0; ['calcPerCyl','calcBore','calcRod','calcIso','rodSFResult'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='--'; }); delete findOverlay.dataset.bore; delete findOverlay.dataset.rod; $('inputQty').disabled=false; $('inputEqual').disabled=false; });
+  findBtn.addEventListener('click', ()=>{ findOverlay.style.display='flex'; updateFindCalc(); });
+  closeFind.addEventListener('click', ()=>{ findOverlay.style.display='none'; });
+  // findOverlay outside click should NOT close the modal (per request)
+
+  applyFind.addEventListener('click', ()=>{
     const b = parseFloat(findOverlay.dataset.bore||0); const r = parseFloat(findOverlay.dataset.rod||0);
     if(!b || !r){ alert('Please enter valid weight/capacity and ensure selections.'); return; }
     if($('boreDia')) $('boreDia').value = b.toFixed(2); if($('rodDia')) $('rodDia').value = r.toFixed(2);
     computeAll(); findOverlay.style.display='none';
   });
 
-  // ---------------- Rod Safety (Euler buckling) ----------------
-  const E_mod = 2.1e5; // N/mm² (Young's modulus)
 
-  function computeRodSafety() {
-    const statusDiv = document.getElementById('rodSafetyStatus');
-    if (!statusDiv) return;
-
-    const strokeInput = document.getElementById('rodSafetyStroke');
-    const endCond = document.getElementById('rodEndCondition');
-    const isoRodSel = document.getElementById('isoRod');
-    const perCylText = document.getElementById('calcPerCyl');
-
-    const L = parseFloat(strokeInput?.value) || 0;
-    const K = parseFloat(endCond?.value) || 1.0;
-    const d = parseFloat(isoRodSel?.value) || 0;
-    const perText = perCylText?.textContent || '';
-    const load_kN = parseFloat(perText.replace(/[^\d.\-]/g, '')) || 0;
-    const loadN = load_kN * 1000;
-
-    // when input incomplete
-    if (!L || !d || !loadN) {
-      statusDiv.textContent = '⚠️ Enter stroke length to check safety';
-      statusDiv.className = 'safety-status safety-warning';
-      return;
-    }
-
-    // Euler buckling calculation
-    const I = (Math.PI * Math.pow(d, 4)) / 64; // mm⁴
-    const Pcr = (Math.pow(Math.PI, 2) * E_mod * I) / Math.pow(K * L, 2); // N
-    const Pcr_kN = Pcr / 1000;
-    const margin = ((Pcr / loadN - 1) * 100).toFixed(2);
-
-    if (Pcr > 2 * loadN) {
-      statusDiv.textContent = `Rod Safe — ${margin}% margin (Pcr = ${Pcr_kN.toFixed(2)} kN)`;
-      statusDiv.className = 'safety-status safety-safe';
-    } else if (Pcr > 1.5 * loadN) {
-      statusDiv.textContent = `Rod Warning — ${margin}% margin (Pcr = ${Pcr_kN.toFixed(2)} kN)`;
-      statusDiv.className = 'safety-status safety-warning';
-    } else {
-      statusDiv.textContent = `Rod Not Safe — ${margin}% margin (Pcr = ${Pcr_kN.toFixed(2)} kN)`;
-      statusDiv.className = 'safety-status safety-unsafe';
-    }
-  }
-
-  // re-run whenever related values change
-  ['rodSafetyStroke', 'rodEndCondition', 'isoRod'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('input', computeRodSafety);
+  // Rod Safety Factor check (uses stroke as column length)
+  const checkRodBtn = $('checkRodSF');
+  if(checkRodBtn) checkRodBtn.addEventListener('click', ()=>{
+    const d = parseFloat($('calcIso').textContent) || parseFloat(findOverlay.dataset.bore) || 0;
+    // if calcIso not numeric, try dataset
+    const rodDia = parseFloat(findOverlay.dataset.rod) || parseFloat($('isoRod')? $('isoRod').value : 0) || 0;
+    const stroke = parseFloat($('inputStroke').value) || parseFloat($('stroke')?.value) || 0;
+    const K = parseFloat($('endCond')? $('endCond').value : $('endCond')?.value) || parseFloat($('endCond')?.value) || parseFloat($('endCond')||1.0);
+    const endK = parseFloat($('endCond')? $('endCond').value : 1.0);
+    const matY = parseFloat($('matYield').value) || 400;
+    const targetSF = parseFloat($('buckSF').value) || 2.0;
+    const perCyl_text = $('calcPerCyl').textContent || '--';
+    let perCyl = 0;
+    if(perCyl_text && perCyl_text.includes('kN')) perCyl = parseFloat(perCyl_text.replace(/[^\d.-]/g,'')) || 0;
+    // if dataset bore/rod exist, use rodDia else use isoRod selection
+    const d_use = rodDia || parseFloat($('rodDia').value) || 0;
+    if(!d_use || !stroke || perCyl===0){ $('rodSFResult').textContent = 'Insufficient data'; $('rodSFResult').style.color = '#d97706'; return; }
+    // Euler critical load Pcr = pi^3 * E * d^4 / (64 * (K*L)^2)
+    const E = 210e9;
+    const L = (stroke)/1000.0;
+    const Kfactor = parseFloat($('endCond').value) || 1.0;
+    const d_m = d_use/1000.0;
+    const Pcr = Math.PI**3 * E * d_m**4 / (64 * (Kfactor * L)**2);
+    const actualSF = Pcr / (perCyl*1000.0);
+    const sfText = actualSF.toFixed(2);
+    let color = '#16a34a'; let msg = 'Safe — SF = ' + sfText;
+    if(actualSF < targetSF){ color = '#dc2626'; msg = 'Unsafe — SF = ' + sfText + ' (target ' + targetSF + ')'; }
+    else if(actualSF < (targetSF + 0.5)){ color = '#d97706'; msg = 'Borderline — SF = ' + sfText; }
+    $('rodSFResult').textContent = msg; $('rodSFResult').style.color = color;
   });
-
-  // observe load changes
-  const calcNode = document.getElementById('calcPerCyl');
-  if (calcNode) {
-    const mo = new MutationObserver(() => computeRodSafety());
-    mo.observe(calcNode, { childList: true, subtree: true });
-  }
 
   // initial compute
   computeAll();
