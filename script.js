@@ -1,25 +1,30 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const pwdInput = document.getElementById('pwdInput');
-  const loginBtn = document.getElementById('loginBtn');
-  const overlay = document.getElementById('overlay');
+  const $ = (id) => document.getElementById(id);
 
+  // ===== LOGIN =====
+  const pwdInput = $('pwdInput');
+  const loginBtn = $('loginBtn');
+  const overlay = $('overlay');
+  const topbar = $('topbar');
+  const app = $('app');
   const DEFAULT_PWD = 'Hydra';
 
   if (loginBtn) {
     loginBtn.addEventListener('click', () => {
-      const v = pwdInput.value.trim();
-      // Case-insensitive password check
+      const v = (pwdInput && pwdInput.value || '').trim();
       if (v.toLowerCase() === DEFAULT_PWD.toLowerCase()) {
-        overlay.style.display = 'none';
+        // hide overlay, show app
+        if (overlay) overlay.style.display = 'none';
+        if (topbar) topbar.style.display = 'flex';
+        if (app) app.style.display = 'block';
       } else {
+        if (pwdInput) pwdInput.value = '';
         alert('Incorrect password');
       }
     });
   }
 
-  // --- keep the rest of your initialization code below here ---
-
-  // helpers
+  // ----- helpers -----
   function area_mm2(d){ return Math.PI*Math.pow(d/2,2); }
   function mm_from_area(a){ return Math.sqrt((4*a)/Math.PI); }
   function fmt(v, p=2){ return (isNaN(v)||v==='' ? '--' : Number(v).toFixed(p)); }
@@ -138,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const selectAllHeader = $('selectAllHeader'); if(selectAllHeader) selectAllHeader.addEventListener('change', (e)=>{ const checks=document.querySelectorAll('.cylSelect'); checks.forEach(c=> c.checked=selectAllHeader.checked); });
   document.addEventListener('change', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('cylSelect')){ const checks=document.querySelectorAll('.cylSelect'); const allChecked=checks.length>0 && Array.from(checks).every(c=>c.checked); if(selectAllHeader) selectAllHeader.checked=allChecked; } });
 
-  // export to excel - columns per user request, flows in L/min
+  // export to excel
   if($('exportBtn')) $('exportBtn').addEventListener('click', ()=>{
     const header=['Name','No. of Cylinders','Bore Dia (mm)','Rod Dia (mm)','Stroke (mm)','Time Option (Bore)','Time Value (Bore)','Time Option (Rod)','Time Value (Rod)','Pressure/Force Option (Bore)','Force Value (Bore) kN','Pressure (Bore) bar','Pressure/Force Option (Rod)','Force Value (Rod) kN','Pressure (Rod) bar','Total Flow (Bore) L/min','Total Flow (Rod) L/min','Total Power (Bore) kW','Total Power (Rod) kW','Bore Area mm2','Rod Area mm2'];
     const rows=[header];
@@ -176,10 +181,10 @@ document.addEventListener('DOMContentLoaded', () => {
     checks.forEach(ch => { if(ch.checked){ const idx = parseInt(ch.dataset.index); const c = savedCyls[idx]; if(c){ rows.push(computeRow(c)); if(c.name) addedNames.add(c.name); } } });
     const current = {name: $('cylName')? $('cylName').value.trim() : '', bore: $('boreDia')? $('boreDia').value : '', rod: $('rodDia')? $('rodDia').value : '', stroke: $('stroke')? $('stroke').value : '', nCyl: $('nCyl')? $('nCyl').value : 1};
     if((current.bore || current.rod || current.stroke) && !addedNames.has(current.name || '')) rows.push(computeRow(current));
-    const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(rows); XLSX.utils.book_append_sheet(wb, ws, 'Cylinder_Results'); XLSX.writeFile(wb, 'Hydraulic_Cylinder_Results_v1.2.0.xlsx');
+    const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(rows); XLSX.utils.book_append_sheet(wb, ws, 'Cylinder_Results'); XLSX.writeFile(wb, 'Hydraulic_Cylinder_Results_v1.3.3.xlsx');
   });
 
-  // Find modal logic - corrected 'all cylinders hold' behavior
+  // Find modal logic
   const findOverlay = $('findModalOverlay'); const findBtn = $('findBtn'); const closeFind = $('closeFind'); const applyFind = $('applyFind');
   const isoSelect = $('isoBore'); const isoRod = $('isoRod'); const clearFind = $('clearFind'); const resetFind = $('resetFind');
 
@@ -206,10 +211,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if(cap>0){ $('inputQty').disabled=true; $('inputEqual').disabled=true; } else { $('inputQty').disabled=false; $('inputEqual').disabled=false; }
 
-    // Behavior:
-    // single cyl => perCyl = total_kN
-    // multiple & equal checked => perCyl = total_kN (each holds full entered weight)
-    // multiple & equal unchecked => perCyl = total_kN / qty
     let perCyl_kN = total_kN;
     if(cap>0) perCyl_kN = total_kN;
     else {
@@ -239,132 +240,74 @@ document.addEventListener('DOMContentLoaded', () => {
   if(document.getElementById('clearFind')) document.getElementById('clearFind').addEventListener('click', ()=>{ ['inputWeight','inputCapacity','inputQty','inputPressure'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; }); $('weightUnit').selectedIndex=0; $('capUnit').selectedIndex=0; $('inputQty').value=1; $('inputEqual').checked=true; $('rodType').selectedIndex=1; isoSelect.selectedIndex=0; isoRod.selectedIndex=0; ['calcPerCyl','calcBore','calcRod','calcIso'].forEach(id=>document.getElementById(id).textContent='--'); delete findOverlay.dataset.bore; delete findOverlay.dataset.rod; $('inputQty').disabled=false; $('inputEqual').disabled=false; });
 
   if(resetFind) resetFind.addEventListener('click', ()=>{ if(document.getElementById('clearFind')) document.getElementById('clearFind').click(); });
-  findBtn.addEventListener('click', ()=>{ findOverlay.style.display='flex'; updateFindCalc(); });
-  closeFind.addEventListener('click', ()=>{ findOverlay.style.display='none'; });
-  findOverlay.addEventListener('click', (e)=>{ if(e.target===findOverlay) findOverlay.style.display='none'; });
+  if(findBtn) findBtn.addEventListener('click', ()=>{ findOverlay.style.display='flex'; updateFindCalc(); computeRodSafety(); });
+  if(closeFind) closeFind.addEventListener('click', ()=>{ findOverlay.style.display='none'; });
+  if(findOverlay) findOverlay.addEventListener('click', (e)=>{ if(e.target===findOverlay) findOverlay.style.display='none'; });
 
-  applyFind.addEventListener('click', ()=>{
+  if(applyFind) applyFind.addEventListener('click', ()=>{
     const b = parseFloat(findOverlay.dataset.bore||0); const r = parseFloat(findOverlay.dataset.rod||0);
     if(!b || !r){ alert('Please enter valid weight/capacity and ensure selections.'); return; }
     if($('boreDia')) $('boreDia').value = b.toFixed(2); if($('rodDia')) $('rodDia').value = r.toFixed(2);
     computeAll(); findOverlay.style.display='none';
   });
-// ---------------- Rod Safety (Euler buckling) ----------------
-const E_mod = 2.1e5; // N/mm² (Young's modulus)
 
-function computeRodSafety() {
-  const statusDiv = document.getElementById('rodSafetyStatus');
-  if (!statusDiv) return;
+  // ---------------- Rod Safety (Euler buckling) ----------------
+  const E_mod = 2.1e5; // N/mm² (Young's modulus)
 
-  const strokeInput = document.getElementById('rodSafetyStroke');
-  const endCond = document.getElementById('rodEndCondition');
-  const isoRodSel = document.getElementById('isoRod');
-  const perCylText = document.getElementById('calcPerCyl');
+  function computeRodSafety() {
+    const statusDiv = document.getElementById('rodSafetyStatus');
+    if (!statusDiv) return;
 
-  const L = parseFloat(strokeInput?.value) || 0;
-  const K = parseFloat(endCond?.value) || 1.0;
-  const d = parseFloat(isoRodSel?.value) || 0;
-  const perText = perCylText?.textContent || '';
-  const load_kN = parseFloat(perText.replace(/[^\d.\-]/g, '')) || 0;
-  const loadN = load_kN * 1000;
+    const strokeInput = document.getElementById('rodSafetyStroke');
+    const endCond = document.getElementById('rodEndCondition');
+    const isoRodSel = document.getElementById('isoRod');
+    const perCylText = document.getElementById('calcPerCyl');
 
-  // when input incomplete
-  if (!L || !d || !loadN) {
-    statusDiv.textContent = '⚠️ Enter stroke length to check safety';
-    statusDiv.className = 'safety-status safety-warning';
-    return;
-  }
+    const L = parseFloat(strokeInput?.value) || 0;
+    const K = parseFloat(endCond?.value) || 1.0;
+    const d = parseFloat(isoRodSel?.value) || 0;
+    const perText = perCylText?.textContent || '';
+    const load_kN = parseFloat(perText.replace(/[^\d.\-]/g, '')) || 0;
+    const loadN = load_kN * 1000;
 
-  // Euler buckling calculation
-  const I = (Math.PI * Math.pow(d, 4)) / 64; // mm⁴
-  const Pcr = (Math.pow(Math.PI, 2) * E_mod * I) / Math.pow(K * L, 2); // N
-  const Pcr_kN = Pcr / 1000;
-  const margin = ((Pcr / loadN - 1) * 100).toFixed(2);
+    // when input incomplete
+    if (!L || !d || !loadN) {
+      statusDiv.textContent = '⚠️ Enter stroke length to check safety';
+      statusDiv.className = 'safety-status safety-warning';
+      return;
+    }
 
-  if (Pcr > 2 * loadN) {
-    statusDiv.textContent = `Rod Safe — ${margin}% margin (Pcr = ${Pcr_kN.toFixed(2)} kN)`;
-    statusDiv.className = 'safety-status safety-safe';
-  } else if (Pcr > 1.5 * loadN) {
-    statusDiv.textContent = `Rod Warning — ${margin}% margin (Pcr = ${Pcr_kN.toFixed(2)} kN)`;
-    statusDiv.className = 'safety-status safety-warning';
-  } else {
-    statusDiv.textContent = `Rod Not Safe — ${margin}% margin (Pcr = ${Pcr_kN.toFixed(2)} kN)`;
-    statusDiv.className = 'safety-status safety-unsafe';
-  }
-}
+    // Euler buckling calculation
+    const I = (Math.PI * Math.pow(d, 4)) / 64; // mm⁴
+    const Pcr = (Math.pow(Math.PI, 2) * E_mod * I) / Math.pow(K * L, 2); // N
+    const Pcr_kN = Pcr / 1000;
+    const margin = ((Pcr / loadN - 1) * 100).toFixed(2);
 
-// re-run whenever related values change
-['rodSafetyStroke', 'rodEndCondition', 'isoRod'].forEach(id => {
-  const el = document.getElementById(id);
-  if (el) el.addEventListener('input', computeRodSafety);
-});
-
-// observe load changes
-const calcNode = document.getElementById('calcPerCyl');
-if (calcNode) {
-  const mo = new MutationObserver(() => computeRodSafety());
-  mo.observe(calcNode, { childList: true, subtree: true });
-}
-
-// ensure compute runs when modal opens
-document.getElementById('findBtn')?.addEventListener('click', () => {
-  setTimeout(computeRodSafety, 200);
-});
-
-      // calc per-cylinder load from modal output (e.g. "12.34 kN")
-      const perText = perCylText.textContent || '';
-      const perVal = parseFloat(perText.replace(/[^\d\.\-]/g,'')) || 0; // kN
-      if(L <= 0 || d <= 0 || perVal <= 0){
-        statusDiv.textContent='--';
-        statusDiv.className='safety-status';
-        return;
-      }
-      // moment of inertia I = pi*d^4/64
-      const I = (Math.PI * Math.pow(d,4)) / 64.0; // mm^4
-      // Pcr = pi^2 * E * I / (K*L)^2  (N)
-      const Pcr = (Math.pow(Math.PI,2) * E_mod * I) / Math.pow(K * L, 2);
-      const loadN = perVal * 1000.0; // kN -> N
-      // safety: require Pcr > 1.5 * load
-      if(Pcr > 2.0 * loadN){
-        statusDiv.textContent = 'Rod Safe';
-        statusDiv.className = 'safety-status safety-safe';
-      } else if (Pcr > 1.5 * loadN) {
-        statusDiv.textContent = 'Rod Warning';
-        statusDiv.className = 'safety-status safety-warning';
-      } else {
-        statusDiv.textContent = 'Rod Not Safe';
-        statusDiv.className = 'safety-status safety-unsafe';
-      }
-    }catch(e){
-      statusDiv.textContent='--';
-      statusDiv.className='safety-status';
-      console.error('Rod safety compute error', e);
+    if (Pcr > 2 * loadN) {
+      statusDiv.textContent = `Rod Safe — ${margin}% margin (Pcr = ${Pcr_kN.toFixed(2)} kN)`;
+      statusDiv.className = 'safety-status safety-safe';
+    } else if (Pcr > 1.5 * loadN) {
+      statusDiv.textContent = `Rod Warning — ${margin}% margin (Pcr = ${Pcr_kN.toFixed(2)} kN)`;
+      statusDiv.className = 'safety-status safety-warning';
+    } else {
+      statusDiv.textContent = `Rod Not Safe — ${margin}% margin (Pcr = ${Pcr_kN.toFixed(2)} kN)`;
+      statusDiv.className = 'safety-status safety-unsafe';
     }
   }
 
-  // auto-update rod safety when relevant fields change
-  ['rodSafetyStroke','rodEndCondition','isoRod','calcPerCyl'].forEach(id=>{
+  // re-run whenever related values change
+  ['rodSafetyStroke', 'rodEndCondition', 'isoRod'].forEach(id => {
     const el = document.getElementById(id);
-    if(el) el.addEventListener('input', computeRodSafety);
+    if (el) el.addEventListener('input', computeRodSafety);
   });
 
-  // observe text changes on calcPerCyl (it's not an input) using MutationObserver
-  const calcPerNode = document.getElementById('calcPerCyl');
-  if(calcPerNode){
-    const mo = new MutationObserver(()=> computeRodSafety());
-    mo.observe(calcPerNode, { characterData: true, childList: true, subtree: true });
+  // observe load changes
+  const calcNode = document.getElementById('calcPerCyl');
+  if (calcNode) {
+    const mo = new MutationObserver(() => computeRodSafety());
+    mo.observe(calcNode, { childList: true, subtree: true });
   }
-  // ensure updateFindCalc triggers safety update as well
-  const original_updateFindCalc = typeof updateFindCalc === 'function' ? updateFindCalc : null;
-  if(original_updateFindCalc){
-    // wrap updateFindCalc to also compute rod safety after it's run
-    const _orig = updateFindCalc;
-    updateFindCalc = function(){
-      _orig();
-      computeRodSafety();
-    };
-  }
-  // apply button still available
+
   // initial compute
   computeAll();
 });
