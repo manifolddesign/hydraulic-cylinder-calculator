@@ -1,4 +1,4 @@
-
+/* user's style.css pasted earlier - unchanged */
 :root{--accent:#1e88e5;--muted:#64748b;--highlight:#e3f2fd}
 *{box-sizing:border-box;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0}
 html{font-size:16px}
@@ -136,3 +136,131 @@ label{text-align:left}
 /* Reduce extra spacing in modal-results/per-cylinder block */
 .modal-results{margin-top:8px}
 .res{padding:6px}
+/* --- Compact Find Modal --- */
+.modal.compact {
+  width: 720px;
+  max-width: 95%;
+  padding: 16px 20px;
+  text-align: left;
+}
+
+.modal.compact h2 {
+  text-align: center;
+  color: var(--accent);
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.modal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px 16px;
+  align-items: end;
+}
+
+.modal-grid .field {
+  margin-bottom: 4px;
+}
+
+.modal-grid .field.wide {
+  grid-column: span 2;
+}
+
+.modal-grid .field.toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px; /* reduce gap or set to 0 */
+}
+
+.compact-results {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #e6eef8;
+}
+
+.modal-actions-row {
+  margin-top: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* --- Button Styles --- */
+.btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  transition: background 0.2s;
+}
+.btn.primary:hover {
+  background: #1565c0;
+}
+
+.btn.secondary {
+  background: #fff;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  transition: all 0.2s;
+}
+.btn.secondary:hover {
+  background: var(--highlight);
+}
+
+.btn.ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid #e0e0e0;
+  transition: all 0.2s;
+}
+.btn.ghost:hover {
+  background: #f3f7fb;
+  color: #0b1724;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .modal.compact {
+    width: 95%;
+    padding: 12px;
+  }
+
+  .modal-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .modal-grid .field.wide {
+    grid-column: span 1;
+  }
+}
+
+/* --- Compact Find Modal adjustments --- */
+.modal.compact .modal-grid {display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.modal.compact .field.wide {grid-column:1/3}
+
+@media (max-width:768px){
+  .modal.compact .modal-grid{grid-template-columns:1fr}
+}
+
+/* ensure rod type + ISO rod share a row nicely */
+#rodType, #isoRod {width:100%;min-width:220px}
+
+/* --- Rod End Condition Dropdown with Images --- */
+#rodEndCondition {
+  background-color: #fff;
+}
+
+.rod-end-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rod-end-option img {
+  width: 150px;
+  height: 50px;
+  object-fit: contain;
+  border-radius: 5px;
+  border: 1px solid #e0e0e0;
+}
+

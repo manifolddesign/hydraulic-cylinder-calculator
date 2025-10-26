@@ -1,12 +1,16 @@
-
-/* script v1.3.3 - implements calculations, find modal, export, login (updated) */
+/* script v1.3.4 - updates:
+   - ISO bore auto-select next-larger standard
+   - ISO rod updates automatically when ISO bore changes (and when rodType changes)
+   - End Condition images preview added
+   - Reset in Find modal clears values
+   - Minor robustness fixes
+*/
 const DEFAULT_PWD = 'Hydra@2025';
 document.addEventListener('DOMContentLoaded', () => {
   const $ = id => document.getElementById(id);
 
   // login
   const pwdOverlay = $('pwdOverlay'), pwdInput = $('pwdInput'), pwdBtn = $('pwdBtn'), pwdError = $('pwdError');
-  // allow Enter key to submit password
   if(pwdInput){ pwdInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') pwdBtn.click(); }); }
   const topbar = $('topbar'), app = $('app');
   pwdBtn.addEventListener('click', ()=>{
@@ -28,6 +32,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if(unit==='mmin') return val/60;
     return 0;
   }
+  function nextLargerISO(list, value){
+    if(!value || isNaN(value)) return list[0];
+    const sorted = list.slice().sort((a,b)=>a-b);
+    for(let i=0;i<sorted.length;i++){
+      if(sorted[i] >= value) return sorted[i];
+    }
+    return sorted[sorted.length-1];
+  }
   function nearestIso(list, value){
     if(!value||isNaN(value)) return list[0];
     let nearest=list[0], mind=Math.abs(value-nearest);
@@ -36,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const ISO_BORES=[32,40,50,63,80,100,125,140,160,180,200,220,250,280,320,350,400];
-  const ISO_RODS=[16,20,25,28,32,36,40,45,50,56,63,70,80,90,100];
+  const ISO_RODS=[16,20,25,28,32,36,40,45,50,56,63,70,80,90,100,110,125,140,160,180,200,220];
 
   // compute main page values
   function computeAll(){
@@ -53,8 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const Vr = unitTo_mps(parseFloat($('timeValR').value)||0, $('timeUnitR').value, stroke);
     const timeB = Vb>0? (stroke/1000)/Vb : 0;
     const timeR = Vr>0? (stroke/1000)/Vr : 0;
-    const Qb = (Ab?Ab:0)/1e6 * (Vb*60) * 1000; // L/min per cyl
-    const Qr = (Aann?Aann:0)/1e6 * (Vr*60) * 1000; // L/min per cyl
+    // Use consistent flow calc: Q(L/min) = Area(mm2)*velocity(m/s)*60 / 1000 (to convert L)
+    const Qb = (Ab?Ab:0) * (Vb*60) / 1e6 * 1000; // simplified to previous behavior but robust
+    const Qr = (Aann?Aann:0) * (Vr*60) / 1e6 * 1000;
     const Qb_tot = Qb * n;
     const Qr_tot = Qr * n;
 
@@ -104,10 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.output').forEach(o=> o.textContent='--');
     if($('nCyl')) $('nCyl').value=1;
     if($('stroke')) $('stroke').value=1500;
-    // also clear saved selection checkboxes and header checkbox
     const selHeader = document.getElementById('selectAllHeader'); if(selHeader) selHeader.checked=false;
     document.querySelectorAll('.cylSelect').forEach(c=> c.checked=false);
-    // clear rod safety status display
     const rodStatus = document.getElementById('rodSafetyStatus'); if(rodStatus){ rodStatus.textContent='--'; rodStatus.className='safety-status'; }
   });
 
@@ -121,7 +132,6 @@ document.addEventListener('DOMContentLoaded', () => {
       tbody.appendChild(tr);
     });
     document.querySelectorAll('.deleteBtn').forEach(btn=> btn.addEventListener('click', (e)=>{ const i=parseInt(e.currentTarget.dataset.index); if(!isNaN(i)){ savedCyls.splice(i,1); renderList(); } }));
-    // show/hide saved cylinders section depending on whether there are entries
     const savedTitle = document.querySelector('.savedTitle'); const savedTable = document.getElementById('savedList');
     if(savedCyls.length>0){ if(savedTitle) savedTitle.style.display='block'; if(savedTable) savedTable.style.display='table'; }
     else { if(savedTitle) savedTitle.style.display='none'; if(savedTable) savedTable.style.display='none'; }
@@ -182,12 +192,12 @@ document.addEventListener('DOMContentLoaded', () => {
     checks.forEach(ch => { if(ch.checked){ const idx = parseInt(ch.dataset.index); const c = savedCyls[idx]; if(c){ rows.push(computeRow(c)); if(c.name) addedNames.add(c.name); } } });
     const current = {name: $('cylName')? $('cylName').value.trim() : '', bore: $('boreDia')? $('boreDia').value : '', rod: $('rodDia')? $('rodDia').value : '', stroke: $('stroke')? $('stroke').value : '', nCyl: $('nCyl')? $('nCyl').value : 1};
     if((current.bore || current.rod || current.stroke) && !addedNames.has(current.name || '')) rows.push(computeRow(current));
-    const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(rows); XLSX.utils.book_append_sheet(wb, ws, 'Cylinder_Results'); XLSX.writeFile(wb, 'Hydraulic_Cylinder_Results_v1.3.3.xlsx');
+    const wb = XLSX.utils.book_new(); const ws = XLSX.utils.aoa_to_sheet(rows); XLSX.utils.book_append_sheet(wb, ws, 'Cylinder_Results'); XLSX.writeFile(wb, 'Hydraulic_Cylinder_Results_v1.3.4.xlsx');
   });
 
-  // Find modal logic - corrected 'all cylinders hold' behavior
+  // Find modal logic - corrected 'all cylinders hold' behavior, iso/rod link, pictures, reset fix
   const findOverlay = $('findModalOverlay'); const findBtn = $('findBtn'); const closeFind = $('closeFind'); const applyFind = $('applyFind');
-  const isoSelect = $('isoBore'); const isoRod = $('isoRod'); const clearFind = $('clearFind'); const resetFind = $('resetFind');
+  const isoSelect = $('isoBore'); const isoRod = $('isoRod'); const resetFind = $('resetFind');
 
   ISO_BORES.forEach(b=>{ const o=document.createElement('option'); o.value=b; o.textContent=b+' mm'; isoSelect.appendChild(o); });
   ISO_RODS.forEach(r=>{ const o=document.createElement('option'); o.value=r; o.textContent=r+' mm'; isoRod.appendChild(o); });
@@ -212,14 +222,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if(cap>0){ $('inputQty').disabled=true; $('inputEqual').disabled=true; } else { $('inputQty').disabled=false; $('inputEqual').disabled=false; }
 
-    // Behavior:
-    // - If capacity specified, the capacity is treated as per-cylinder if provided.
-    // - If capacity not provided:
-    //   * If 'Share load equally' is CHECKED => perCylinder = total_kN / qty
-    //   * If UNCHECKED => conservative: each cylinder must hold the full total_kN
     let perCyl_kN = total_kN;
     if(cap>0){
-      perCyl_kN = total_kN; // capacity treated as per-cylinder when entered
+      perCyl_kN = total_kN;
     } else {
       if(qty <= 1) perCyl_kN = total_kN;
       else if(equal) perCyl_kN = total_kN / Math.max(qty,1);
@@ -228,29 +233,69 @@ document.addEventListener('DOMContentLoaded', () => {
     $('calcPerCyl').textContent = fmt(perCyl_kN) + ' kN';
     let result = pressure>0? computeFromPressure(perCyl_kN, pressure, rodRatio) : computeFromNoPressure(perCyl_kN, rodRatio);
     $('calcBore').textContent = fmt(result.bore) + ' mm';
-    const nearest = nearestIso(ISO_BORES, result.bore);
-    isoSelect.value = nearest;
-    $('calcIso').textContent = nearest + ' mm';
-    const lightRod = Math.round((nearest*0.3)/5)*5; const standardRod = Math.round((nearest*0.4)/5)*5; const heavyRod = Math.round((nearest*0.5)/5)*5;
+
+    // select next larger ISO bore
+    const chosenIso = nextLargerISO(ISO_BORES, result.bore);
+    isoSelect.value = chosenIso;
+    $('calcIso').textContent = chosenIso + ' mm';
+
+    // compute rod recommendations and set isoRod automatically based on chosenIso and rodType
+    const lightRod = Math.round((chosenIso*0.3)/5)*5; const standardRod = Math.round((chosenIso*0.4)/5)*5; const heavyRod = Math.round((chosenIso*0.5)/5)*5;
     $('calcRod').textContent = 'Light: '+lightRod+' mm • Std: '+standardRod+' mm • Heavy: '+heavyRod+' mm';
     const desiredRod = (rodType==='light'?lightRod:rodType==='heavy'?heavyRod:standardRod);
     const nearestRod = nearestIso(ISO_RODS, desiredRod);
     isoRod.value = nearestRod;
-    findOverlay.dataset.bore = nearest; findOverlay.dataset.rod = nearestRod;
+    findOverlay.dataset.bore = chosenIso; findOverlay.dataset.rod = nearestRod;
+
+    // update end condition preview (in case user changed it)
+    const sel = $('rodEndCondition');
+    const prev = document.getElementById('endCondPreview');
+    if(prev) prev.innerHTML = endConditionSVG[sel.value] || '';
   }
 
+  // wire modal inputs to update
   ['inputWeight','weightUnit','inputCapacity','capUnit','inputQty','inputEqual','inputPressure','rodType'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('input', updateFindCalc); });
 
-  isoSelect.addEventListener('input', ()=>{ const b=parseFloat(isoSelect.value)||0; if(b>0){ $('calcIso').textContent = b + ' mm'; const lightRod = Math.round((b*0.3)/5)*5; const standardRod = Math.round((b*0.4)/5)*5; const heavyRod = Math.round((b*0.5)/5)*5; $('calcRod').textContent = 'Light: '+lightRod+' mm • Std: '+standardRod+' mm • Heavy: '+heavyRod+' mm'; const nearestRod = nearestIso(ISO_RODS, standardRod); isoRod.value = nearestRod; findOverlay.dataset.bore = b; findOverlay.dataset.rod = nearestRod; } });
-  isoRod.addEventListener('input', ()=>{ findOverlay.dataset.rod = parseFloat(isoRod.value)||0; });
+  // when user manually changes ISO bore, update isoRod automatically
+  isoSelect.addEventListener('change', ()=>{
+    const b = parseFloat(isoSelect.value)||0;
+    if(b>0){
+      const rodType = $('rodType')? $('rodType').value : 'standard';
+      const lightRod = Math.round((b*0.3)/5)*5; const standardRod = Math.round((b*0.4)/5)*5; const heavyRod = Math.round((b*0.5)/5)*5;
+      const desiredRod = (rodType==='light'?lightRod:rodType==='heavy'?heavyRod:standardRod);
+      const nearestRod = nearestIso(ISO_RODS, desiredRod);
+      isoRod.value = nearestRod;
+      $('calcIso').textContent = b + ' mm';
+      $('calcRod').textContent = 'Light: '+lightRod+' mm • Std: '+standardRod+' mm • Heavy: '+heavyRod+' mm';
+      findOverlay.dataset.bore = b; findOverlay.dataset.rod = nearestRod;
+      // also compute rod safety if modal has stroke and perCyl present
+      setTimeout(()=>{ computeRodSafety(); }, 50);
+    }
+  });
 
-  if(document.getElementById('clearFind')) document.getElementById('clearFind').addEventListener('click', ()=>{ ['inputWeight','inputCapacity','inputQty','inputPressure'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; }); $('weightUnit').selectedIndex=0; $('capUnit').selectedIndex=0; $('inputQty').value=1; $('inputEqual').checked=true; $('rodType').selectedIndex=1; isoSelect.selectedIndex=0; isoRod.selectedIndex=0; ['calcPerCyl','calcBore','calcRod','calcIso'].forEach(id=>document.getElementById(id).textContent='--'); delete findOverlay.dataset.bore; delete findOverlay.dataset.rod; $('inputQty').disabled=false; $('inputEqual').disabled=false; });
+  // when user changes rodType, update isoRod suggestion
+  const rodTypeEl = $('rodType');
+  if(rodTypeEl) rodTypeEl.addEventListener('change', ()=>{
+    const b = parseFloat(isoSelect.value)||0;
+    if(b>0) isoSelect.dispatchEvent(new Event('change'));
+    updateFindCalc();
+  });
 
-  if(resetFind) resetFind.addEventListener('click', ()=>{ if(document.getElementById('clearFind')) document.getElementById('clearFind').click(); // also reset rod safety
-    const rodStatus = document.getElementById('rodSafetyStatus'); if(rodStatus){ rodStatus.textContent='--'; rodStatus.className='safety-status'; } });
+  // resetFind behavior - fully clear modal values and results
+  if(resetFind) resetFind.addEventListener('click', ()=>{
+    ['inputWeight','inputCapacity','inputQty','inputPressure','rodSafetyStroke'].forEach(id=>{
+      const el = document.getElementById(id); if(el) el.value='';
+    });
+    $('weightUnit').selectedIndex=0; $('capUnit').selectedIndex=0; $('inputQty').value=1; $('inputEqual').checked=true; $('rodType').selectedIndex=1;
+    isoSelect.selectedIndex = 0; isoRod.selectedIndex = 0;
+    ['calcPerCyl','calcBore','calcRod','calcIso'].forEach(id=>{ const el=document.getElementById(id); if(el) el.textContent='--'; });
+    delete findOverlay.dataset.bore; delete findOverlay.dataset.rod;
+    // reset rod safety
+    const rodStatus = document.getElementById('rodSafetyStatus'); if(rodStatus){ rodStatus.textContent='--'; rodStatus.className='safety-status'; }
+  });
+
   findBtn.addEventListener('click', ()=>{ findOverlay.style.display='flex'; updateFindCalc(); });
   closeFind.addEventListener('click', ()=>{ findOverlay.style.display='none'; });
-  // clicking outside modal will NOT close it (user requested explicit close only)
 
   applyFind.addEventListener('click', ()=>{
     const b = parseFloat(findOverlay.dataset.bore||0); const r = parseFloat(findOverlay.dataset.rod||0);
@@ -276,7 +321,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const L = parseFloat(strokeInput.value) || 0;
       const K = parseFloat(endCond.value) || 1.0;
       const d = parseFloat(isoRodSel.value) || 0; // mm
-      // calc per-cylinder load from modal output (e.g. "12.34 kN")
       const perText = perCylText.textContent || '';
       const perVal = parseFloat(perText.replace(/[^\d\.\-]/g,'')) || 0; // kN
       if(L <= 0 || d <= 0 || perVal <= 0){
@@ -284,24 +328,21 @@ document.addEventListener('DOMContentLoaded', () => {
         statusDiv.className='safety-status';
         return;
       }
-      // moment of inertia I = pi*d^4/64
       const I = (Math.PI * Math.pow(d,4)) / 64.0; // mm^4
-      // Pcr = pi^2 * E * I / (K*L)^2  (N)
       const Pcr = (Math.pow(Math.PI,2) * E_mod * I) / Math.pow(K * L, 2);
       const loadN = perVal * 1000.0; // kN -> N
-      // compute buckling ratio = Pcr / loadN
-const ratio = Pcr / loadN;
-const ratioText = 'Buckling ratio: ' + (ratio? ratio.toFixed(2) : '--');
-if(Pcr > 2.0 * loadN){
-  statusDiv.textContent = 'Rod Safe — ' + ratioText;
-  statusDiv.className = 'safety-status safety-safe';
-} else if (Pcr > 1.5 * loadN) {
-  statusDiv.textContent = 'Rod Warning — ' + ratioText;
-  statusDiv.className = 'safety-status safety-warning';
-} else {
-  statusDiv.textContent = 'Rod Not Safe — ' + ratioText;
-  statusDiv.className = 'safety-status safety-unsafe';
-}
+      const ratio = Pcr / loadN;
+      const ratioText = 'Buckling ratio: ' + (ratio? ratio.toFixed(2) : '--');
+      if(Pcr > 2.0 * loadN){
+        statusDiv.textContent = 'Rod Safe — ' + ratioText;
+        statusDiv.className = 'safety-status safety-safe';
+      } else if (Pcr > 1.5 * loadN) {
+        statusDiv.textContent = 'Rod Warning — ' + ratioText;
+        statusDiv.className = 'safety-status safety-warning';
+      } else {
+        statusDiv.textContent = 'Rod Not Safe — ' + ratioText;
+        statusDiv.className = 'safety-status safety-unsafe';
+      }
     }catch(e){
       statusDiv.textContent='--';
       statusDiv.className='safety-status';
@@ -315,23 +356,133 @@ if(Pcr > 2.0 * loadN){
     if(el) el.addEventListener('input', computeRodSafety);
   });
 
-  // observe text changes on calcPerCyl (it's not an input) using MutationObserver
+  // observe calcPerCyl changes
   const calcPerNode = document.getElementById('calcPerCyl');
   if(calcPerNode){
     const mo = new MutationObserver(()=> computeRodSafety());
     mo.observe(calcPerNode, { characterData: true, childList: true, subtree: true });
   }
+
   // ensure updateFindCalc triggers safety update as well
-  const original_updateFindCalc = typeof updateFindCalc === 'function' ? updateFindCalc : null;
-  if(original_updateFindCalc){
-    // wrap updateFindCalc to also compute rod safety after it's run
+  if(typeof updateFindCalc === 'function'){
     const _orig = updateFindCalc;
     updateFindCalc = function(){
       _orig();
       computeRodSafety();
     };
   }
-  // apply button still available
+
   // initial compute
   computeAll();
 });
+// --- Enhance Rod End Condition Dropdown with Images ---
+document.addEventListener("DOMContentLoaded", () => {
+  const rodEndSelect = document.getElementById("rodEndCondition");
+  if (!rodEndSelect) return;
+
+  const rodOptions = [
+    { value: "2.0", text: "Fixed–Free", img: "fixed-free.png" },
+    { value: "1.0", text: "Pinned–Pinned", img: "pinned-pinned.png" },
+    { value: "0.7", text: "Fixed–Pinned", img: "fixed-pinned.png" },
+    { value: "0.5", text: "Fixed–Fixed", img: "fixed-fixed.png" }
+  ];
+
+  // Clear existing options and rebuild with images
+  rodEndSelect.innerHTML = "";
+  rodOptions.forEach(opt => {
+    const option = document.createElement("option");
+    option.value = opt.value;
+    option.textContent = opt.text;
+    rodEndSelect.appendChild(option);
+  });
+
+  // Replace with custom dropdown UI using images
+  const wrapper = document.createElement("div");
+  wrapper.className = "rod-end-wrapper";
+  rodEndSelect.parentNode.insertBefore(wrapper, rodEndSelect);
+  wrapper.appendChild(rodEndSelect);
+
+  const dropdown = document.createElement("div");
+  dropdown.className = "rod-end-custom";
+  dropdown.style.position = "relative";
+  wrapper.appendChild(dropdown);
+
+  const selected = document.createElement("div");
+  selected.className = "rod-end-selected";
+  selected.style.display = "flex";
+  selected.style.alignItems = "center";
+  selected.style.gap = "8px";
+  selected.style.cursor = "pointer";
+  selected.style.border = "1px solid #e6eef8";
+  selected.style.borderRadius = "10px";
+  selected.style.padding = "8px";
+  selected.style.background = "#fff";
+  dropdown.appendChild(selected);
+
+  const selectedImg = document.createElement("img");
+  selectedImg.src = "pinned-pinned.png";
+  selectedImg.style.width = "40px";
+  selectedImg.style.height = "24px";
+  selectedImg.style.objectFit = "contain";
+  selected.appendChild(selectedImg);
+
+  const selectedText = document.createElement("span");
+  selectedText.textContent = "Pinned–Pinned";
+  selected.appendChild(selectedText);
+
+  const list = document.createElement("div");
+  list.style.position = "absolute";
+  list.style.left = "0";
+  list.style.right = "0";
+  list.style.top = "100%";
+  list.style.background = "#fff";
+  list.style.border = "1px solid #e6eef8";
+  list.style.borderRadius = "10px";
+  list.style.boxShadow = "0 4px 10px rgba(0,0,0,0.1)";
+  list.style.zIndex = "999";
+  list.style.display = "none";
+  dropdown.appendChild(list);
+
+  rodOptions.forEach(opt => {
+    const item = document.createElement("div");
+    item.className = "rod-end-option";
+    item.style.padding = "6px 8px";
+    item.style.display = "flex";
+    item.style.alignItems = "center";
+    item.style.gap = "8px";
+    item.style.cursor = "pointer";
+
+    const img = document.createElement("img");
+    img.src = opt.img;
+    img.width = 40;
+    img.height = 24;
+    img.style.objectFit = "contain";
+    img.style.border = "1px solid #e0e0e0";
+    img.style.borderRadius = "4px";
+    item.appendChild(img);
+
+    const span = document.createElement("span");
+    span.textContent = opt.text;
+    item.appendChild(span);
+
+    item.addEventListener("click", () => {
+      rodEndSelect.value = opt.value;
+      selectedImg.src = opt.img;
+      selectedText.textContent = opt.text;
+      list.style.display = "none";
+    });
+
+    list.appendChild(item);
+  });
+
+  selected.addEventListener("click", () => {
+    list.style.display = list.style.display === "none" ? "block" : "none";
+  });
+
+  document.addEventListener("click", e => {
+    if (!dropdown.contains(e.target)) list.style.display = "none";
+  });
+
+  rodEndSelect.style.display = "none";
+});
+
