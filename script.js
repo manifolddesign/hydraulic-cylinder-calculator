@@ -5,7 +5,7 @@
    - Reset in Find modal clears values
    - Minor robustness fixes
 */
-const DEFAULT_PWD = '';
+const DEFAULT_PWD = 'Hydra@25';
 document.addEventListener('DOMContentLoaded', () => {
   const $ = id => document.getElementById(id);
 
